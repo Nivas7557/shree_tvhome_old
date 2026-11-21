@@ -15,14 +15,13 @@ object LauncherUtils {
     val FLUID_SPRING = OvershootInterpolator(1.45f)
     val SILKY_EASE = DecelerateInterpolator(1.8f)
 
-    fun addApps(pm: PackageManager, category: String, out: MutableMap<String, ResolveInfo>) {
+    fun addApps(pm: PackageManager, category: String, out: MutableMap<String, ResolveInfo>, selfPackageName: String = "shree.tvhome") {
         val query = Intent(Intent.ACTION_MAIN).apply { addCategory(category) }
         val list = pm.queryIntentActivities(query, 0)
-        val selfPkg = pm.javaClass.`package`?.name
         for (app in list) {
             val pkg = app.activityInfo?.packageName ?: continue
             val name = app.activityInfo?.name ?: continue
-            if (pkg == selfPkg || pkg == "shree.tvhome") continue
+            if (pkg == selfPackageName) continue
             out["$pkg/$name"] = app
         }
     }
