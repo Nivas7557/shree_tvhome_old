@@ -354,7 +354,7 @@ class SideControlDrawer(
             presetCards.add(card to titleTv)
             panel.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(6f) })
         }
-        SystemSubPanels.buildDisplayTimeoutAndNightPanel(context, panel, lp) { open(MODE_QUICK) }
+        SystemSubPanels.buildPictureAndDisplayPanel(context, panel, lp) { open(MODE_QUICK) }
     }
 
     private fun buildSoundSubPanel(panel: LinearLayout) {
