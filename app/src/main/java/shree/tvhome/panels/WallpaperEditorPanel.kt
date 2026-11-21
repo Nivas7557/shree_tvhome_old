@@ -116,13 +116,13 @@ object WallpaperEditorPanel {
             panel.addView(auraCard, LinearLayout.LayoutParams(-1, dp(ctx, 50)).apply { bottomMargin = dp(ctx, 8) })
 
             addSection(ctx, panel, "PHOTO FIT & ZOOM")
-            val curScaleMode = lp.prefs.getString("wp_scale_mode", "fit") ?: "fit"
             val curScaleMode = lp.wpScaleMode
             addPillRow(ctx, panel, lp, "fit", listOf("Fit Screen", "Fill Screen"), listOf(curScaleMode == "fit", curScaleMode == "width")) { idx ->
                 lp.wpScaleMode = if (idx == 0) "fit" else "width"
                 onLiveUpdate()
                 rebuild(ctx, panel, lp, onLiveUpdate, onPickNewImage, onDone)
             }
+            
             addPillRow(ctx, panel, lp, "zoom", listOf("Zoom -", "Reset", "Zoom +"), listOf(false, false, false)) { idx ->
                 var z = lp.wpZoom
                 z = when (idx) { 0 -> maxOf(1.0f, z - 0.1f); 1 -> 1.08f; else -> minOf(2.2f, z + 0.1f) }
