@@ -282,10 +282,11 @@ class AmbientStageWidget(
                                         setOnClickListener {
                                             lp.weatherCity = item.name
                                             lp.prefs.edit()
-                                                .putString("cached_city", item.name)
-                                                .putFloat("saved_lat", item.lat.toFloat())
-                                                .putFloat("saved_lon", item.lon.toFloat())
+                                                .putString(LauncherPreferences.PREF_CACHED_CITY, item.name)
+                                                .putFloat(LauncherPreferences.PREF_SAVED_LAT, item.lat.toFloat())
+                                                .putFloat(LauncherPreferences.PREF_SAVED_LON, item.lon.toFloat())
                                                 .apply()
+
                                             cityTv.text = "📍 ${item.name}  ▾"
                                             dialog.dismiss()
                                             triggerWeatherRefresh(true)
@@ -403,8 +404,8 @@ class AmbientStageWidget(
 
         thread {
             try {
-                var lat = lp.prefs.getFloat("saved_lat", 0f).toDouble()
-                var lon = lp.prefs.getFloat("saved_lon", 0f).toDouble()
+                var lat = lp.prefs.getFloat(LauncherPreferences.PREF_SAVED_LAT, 0f).toDouble()
+                var lon = lp.prefs.getFloat(LauncherPreferences.PREF_SAVED_LON, 0f).toDouble()
                 var cityName = lp.weatherCity.trim()
 
                 if (cityName.isNotEmpty() && (lat == 0.0 || lon == 0.0)) {
@@ -414,8 +415,8 @@ class AmbientStageWidget(
                         lon = found.lon
                         cityName = found.name
                         lp.prefs.edit()
-                            .putFloat("saved_lat", lat.toFloat())
-                            .putFloat("saved_lon", lon.toFloat())
+                            .putFloat(LauncherPreferences.PREF_SAVED_LAT, lat.toFloat())
+                            .putFloat(LauncherPreferences.PREF_SAVED_LON, lon.toFloat())
                             .apply()
                     }
                 }
@@ -444,10 +445,10 @@ class AmbientStageWidget(
                 val (emoji, desc) = decodeWeatherCode(code)
 
                 lp.prefs.edit()
-                    .putString("cached_temp", temp)
-                    .putString("cached_cond", desc)
-                    .putString("cached_city", cityName)
-                    .putInt("cached_weather_code", code)
+                    .putString(LauncherPreferences.PREF_CACHED_TEMP, temp)
+                    .putString(LauncherPreferences.PREF_CACHED_COND, desc)
+                    .putString(LauncherPreferences.PREF_CACHED_CITY, cityName)
+                    .putInt(LauncherPreferences.PREF_CACHED_WEATHER_CODE, code)
                     .apply()
 
                 uiHandler.post {
