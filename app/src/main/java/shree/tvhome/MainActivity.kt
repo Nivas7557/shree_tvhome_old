@@ -154,17 +154,49 @@ class MainActivity : Activity() {
         try { contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) } catch (_: Exception) {}
 
         if (req == REQ_PICK_WALLPAPER) {
-            lp.prefs.edit().putString(LauncherPreferences.PREF_WALLPAPER, uri.toString()).putString("wp_scale_mode", "fit")
-                .putFloat("wp_zoom", 1.08f).putInt("wp_offset_x", 0).putInt("wp_offset_y", 0).apply()
+            lp.prefs.edit()
+                .putString(LauncherPreferences.PREF_WALLPAPER, uri.toString())
+                .putString(LauncherPreferences.PREF_WP_SCALE_MODE, "fit")
+                .putFloat(LauncherPreferences.PREF_WP_ZOOM, 1.08f)
+                .putInt(LauncherPreferences.PREF_WP_OFFSET_X, 0)
+                .putInt(LauncherPreferences.PREF_WP_OFFSET_Y, 0)
+                .apply()
             applyWallpaperOnly()
             sideDrawer.open(SideControlDrawer.MODE_WALLPAPER_EDIT)
         } else if (req == REQ_PICK_PROFILE_PIC) {
-            lp.prefs.edit().putString("profile_pic_uri", uri.toString()).apply()
+            lp.profilePicUri = uri.toString()
             topNavBar.refreshProfileAvatar()
             Toast.makeText(this, "Profile avatar updated!", Toast.LENGTH_SHORT).show()
         }
     }
 
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
+        when (requestCode) {
+            shree.tvhome.panels.WifiPanelBuilder.REQ_WIFI_LOCATION -> {
+                if (granted) {
+                    Toast.makeText(this, "Location granted • Scanning Wi-Fi...", Toast.LENGTH_SHORT).show()
+                    if (::sideDrawer.isInitialized && sideDrawer.isOpen) {
+                        sideDrawer.open(SideControlDrawer.MODE_WIFI)
+                    }
+                } else {
+                    Toast.makeText(this, "Location permission needed to view Wi-Fi networks", Toast.LENGTH_SHORT).show()
+                }
+            }
+            shree.tvhome.panels.SystemSubPanels.REQ_BLUETOOTH_CONNECT -> {
+                if (granted) {
+                    Toast.makeText(this, "Bluetooth access granted", Toast.LENGTH_SHORT).show()
+                    if (::sideDrawer.isInitialized && sideDrawer.isOpen) {
+                        sideDrawer.open(SideControlDrawer.MODE_SUB_BLUETOOTH)
+                    }
+                } else {
+                    Toast.makeText(this, "Bluetooth permission denied", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+    
     private fun openImagePicker(requestCode: Int) {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE); type = "image/*"
