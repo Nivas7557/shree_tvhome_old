@@ -137,7 +137,7 @@ class AmbientStageWidget(
         val wTop = LinearLayout(ctx).apply { orientation = HORIZONTAL; gravity = Gravity.CENTER }
         weatherIconTv.apply { text = cachedVisual.first; textSize = 28f; setPadding(0, 0, dp(8), 0) }
         tempTv.apply {
-            text = lp.prefs.getString("cached_temp", "28°C") ?: "28°C"
+            text = lp.prefs.getString(LauncherPreferences.PREF_CACHED_TEMP, "28°C") ?: "28°C"
             textSize = 23f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.WHITE)
@@ -147,7 +147,7 @@ class AmbientStageWidget(
         weatherCard.addView(wTop)
 
         condTv.apply {
-            text = lp.prefs.getString("cached_cond", cachedVisual.second) ?: cachedVisual.second
+            text = lp.prefs.getString(LauncherPreferences.PREF_CACHED_COND, cachedVisual.second) ?: cachedVisual.second
             textSize = 11f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.rgb(145, 225, 255))
@@ -156,7 +156,7 @@ class AmbientStageWidget(
         }
         weatherCard.addView(condTv)
 
-        val savedCity = lp.prefs.getString("cached_city", lp.weatherCity.ifBlank { "Tap to Select City" })
+        val savedCity = lp.prefs.getString(LauncherPreferences.PREF_CACHED_CITY, lp.weatherCity.ifBlank { "Tap to Select City" })
         cityTv.apply {
             text = "📍 $savedCity  ▾"
             textSize = 10.5f
