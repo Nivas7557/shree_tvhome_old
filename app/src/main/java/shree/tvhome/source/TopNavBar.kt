@@ -333,9 +333,9 @@ class TopNavBar(
         val clipPath = Path().apply { addCircle(cx, cy, r, Path.Direction.CW) }
         canvas.clipPath(clipPath)
 
-        val zoom = lp.prefs.getFloat("profile_pic_zoom", 1.0f)
-        val panX = lp.prefs.getFloat("profile_pic_pan_x", 0f)
-        val panY = lp.prefs.getFloat("profile_pic_pan_y", 0f)
+        val zoom = lp.profilePicZoom
+        val panX = lp.profilePicPanX
+        val panY = lp.profilePicPanY
 
         val baseScale = maxOf(outSize.toFloat() / src.width, outSize.toFloat() / src.height)
         val finalScale = baseScale * zoom
