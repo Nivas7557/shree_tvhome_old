@@ -31,8 +31,10 @@ import java.util.Locale
 
 object WifiPanelBuilder {
 
+    const val REQ_WIFI_LOCATION = 201
+
     @Suppress("DEPRECATION")
-    fun build(ctx: Context, panel: LinearLayout, lp: LauncherPreferences, onRefreshPanel: () -> Unit) {
+        fun build(ctx: Context, panel: LinearLayout, lp: LauncherPreferences, onRefreshPanel: () -> Unit) {
         val wm = ctx.applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
         val isWifiOn = try { wm?.isWifiEnabled == true } catch (_: Exception) { true }
 
@@ -122,17 +124,32 @@ object WifiPanelBuilder {
                 setTextColor(lp.accentColor); letterSpacing = 0.08f
             }, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 6) })
 
+            val hasLocPerm = Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
+                ctx.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+            if (!hasLocPerm && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                dynamicListContainer.addView(
+                    makeGlassBtn(ctx, lp, "📍  Allow Location to Scan Wi-Fi") {
+                        (ctx as? Activity)?.requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), REQ_WIFI_LOCATION)
+                    },
+                    LinearLayout.LayoutParams(-1, dp(ctx, 40)).apply { bottomMargin = dp(ctx, 8) }
+                )
+            }
+
             @SuppressLint("MissingPermission")
-            val results = try { wm?.scanResults ?: emptyList() } catch (_: Exception) { emptyList() }
+            val results = if (hasLocPerm) {
+                try { wm?.scanResults ?: emptyList() } catch (_: Exception) { emptyList() }
+            } else emptyList()
             val unique = results.filter { !it.SSID.isNullOrBlank() }.distinctBy { it.SSID }.sortedByDescending { it.level }
 
             if (unique.isEmpty()) {
                 dynamicListContainer.addView(TextView(ctx).apply {
-                    text = "No nearby networks scanned yet. Tap Refresh Scan above."
+                    text = if (hasLocPerm) "No nearby networks scanned yet. Tap Refresh Scan above."
+                           else "Location permission is required by Android TV to list nearby Wi-Fi networks."
                     textSize = 9.5f; setTextColor(Color.argb(190, 210, 230, 250))
                     setPadding(dp(ctx, 4), dp(ctx, 8), dp(ctx, 4), dp(ctx, 8))
-                })
-            } else {
+                }
+            else {
                 for (scan in unique.take(8)) {
                     val isCurrent = scan.SSID == curSsid
                     val netRow = LinearLayout(ctx).apply {
