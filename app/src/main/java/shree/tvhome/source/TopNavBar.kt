@@ -299,7 +299,7 @@ class TopNavBar(
         val initial = cleanName.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "S"
         avatarInitialTv.text = initial
 
-        val picUriStr = lp.prefs.getString("profile_pic_uri", null)
+        val picUriStr = lp.profilePicUri
         if (!picUriStr.isNullOrEmpty()) {
             try {
                 val uri = Uri.parse(picUriStr)
@@ -308,11 +308,11 @@ class TopNavBar(
                     BitmapFactory.decodeStream(it, null, opts)
                 }
                 if (rawBmp != null) {
-                    val zoom = lp.prefs.getFloat("profile_pic_zoom", 1.0f)
                     avatarImageView.setImageBitmap(makeCircularBitmap(rawBmp))
                     avatarImageView.scaleX = 1.0f
                     avatarImageView.scaleY = 1.0f
                     avatarImageView.visibility = View.VISIBLE
+                    avatarInitialTv.visibility = View.GONE
 
                     return
                 }
