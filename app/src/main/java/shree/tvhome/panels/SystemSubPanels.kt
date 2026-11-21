@@ -29,6 +29,7 @@ import java.util.Locale
 
 object SystemSubPanels {
 
+    const val REQ_BLUETOOTH_CONNECT = 202
     data class TimeoutOption(val millis: Int, val label: String)
 
     val SCREEN_TIMEOUT_OPTIONS = listOf(
@@ -82,7 +83,7 @@ object SystemSubPanels {
         }
         statusCard.setOnClickListener {
             if (!hasBtPerm && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                (ctx as? Activity)?.requestPermissions(arrayOf(Manifest.permission.BLUETOOTH_CONNECT), 202)
+                (ctx as? Activity)?.requestPermissions(arrayOf(Manifest.permission.BLUETOOTH_CONNECT), REQ_BLUETOOTH_CONNECT)
                 return@setOnClickListener
             }
             try {
@@ -105,7 +106,7 @@ object SystemSubPanels {
         addHeader(ctx, panel, lp, "PAIRED REMOTES & AUDIO DEVICES")
         if (!hasBtPerm && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val permBtn = makeActionRow(ctx, lp, "🔓", "Allow Bluetooth Access", "Tap to view paired remotes & speakers") {
-                (ctx as? Activity)?.requestPermissions(arrayOf(Manifest.permission.BLUETOOTH_CONNECT), 202)
+                (ctx as? Activity)?.requestPermissions(arrayOf(Manifest.permission.BLUETOOTH_CONNECT), REQ_BLUETOOTH_CONNECT)
             }
             panel.addView(permBtn, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 8) })
         } else {
