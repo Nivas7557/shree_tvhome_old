@@ -37,10 +37,11 @@ object ProfileCropDialog {
         val dialog = Dialog(ctx)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
 
-        var zoom = lp.prefs.getFloat("profile_pic_zoom", 1.0f)
-        var panX = lp.prefs.getFloat("profile_pic_pan_x", 0f)
-        var panY = lp.prefs.getFloat("profile_pic_pan_y", 0f)
-        var rawBitmap: Bitmap? = loadUserBitmap(ctx, lp.prefs.getString("profile_pic_uri", null))
+        var zoom = lp.profilePicZoom
+        var panX = lp.profilePicPanX
+        var panY = lp.profilePicPanY
+        var rawBitmap: Bitmap? = loadUserBitmap(ctx, lp.profilePicUri)
+
 
         val rootGlass = LinearLayout(ctx).apply {
             orientation = LinearLayout.VERTICAL
