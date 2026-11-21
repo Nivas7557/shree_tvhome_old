@@ -90,32 +90,60 @@ class LauncherPreferences(context: Context) {
         set(value) = prefs.edit().putBoolean(PREF_SORT_ASC, value).apply()
 
     var sortOrder: String
-        get() = prefs.getString("sort_order", "az") ?: "az"
-        set(value) = prefs.edit().putString("sort_order", value).apply()
+        get() = prefs.getString(PREF_SORT_ORDER, "az") ?: "az"
+        set(value) = prefs.edit().putString(PREF_SORT_ORDER, value).apply()
 
     var liveWallpaperMode: String
-        get() = prefs.getString("live_wp_mode", LauncherBackground.MODE_SMART) ?: LauncherBackground.MODE_SMART
-        set(value) = prefs.edit().putString("live_wp_mode", value).apply()
+        get() = prefs.getString(PREF_LIVE_WP_MODE, LauncherBackground.MODE_SMART) ?: LauncherBackground.MODE_SMART
+        set(value) = prefs.edit().putString(PREF_LIVE_WP_MODE, value).apply()
 
     var photoWeatherAura: Boolean
-        get() = prefs.getBoolean("photo_weather_aura", true)
-        set(value) = prefs.edit().putBoolean("photo_weather_aura", value).apply()
+        get() = prefs.getBoolean(PREF_PHOTO_WEATHER_AURA, true)
+        set(value) = prefs.edit().putBoolean(PREF_PHOTO_WEATHER_AURA, value).apply()
 
     var cachedWeatherCode: Int
-        get() = prefs.getInt("cached_weather_code", 0)
-        set(value) = prefs.edit().putInt("cached_weather_code", value).apply()
+        get() = prefs.getInt(PREF_CACHED_WEATHER_CODE, 0)
+        set(value) = prefs.edit().putInt(PREF_CACHED_WEATHER_CODE, value).apply()
 
     var motionStyle: String
-        get() = prefs.getString("motion_style", MotionEngine.STYLES.first().key) ?: MotionEngine.STYLES.first().key
-        set(value) = prefs.edit().putString("motion_style", value).apply()
+        get() = prefs.getString(PREF_MOTION_STYLE, MotionEngine.STYLES.first().key) ?: MotionEngine.STYLES.first().key
+        set(value) = prefs.edit().putString(PREF_MOTION_STYLE, value).apply()
 
     var weatherCity: String
-        get() = prefs.getString("weather_city", "") ?: ""
-        set(value) = prefs.edit().putString("weather_city", value).apply()
+        get() = prefs.getString(PREF_WEATHER_CITY, "") ?: ""
+        set(value) = prefs.edit().putString(PREF_WEATHER_CITY, value).apply()
 
-    var userEmail: String
-        get() = prefs.getString("user_email", "") ?: ""
-        set(value) = prefs.edit().putString("user_email", value).apply()
+    var profilePicUri: String?
+        get() = prefs.getString(PREF_PROFILE_PIC_URI, null)
+        set(value) = prefs.edit().putString(PREF_PROFILE_PIC_URI, value).apply()
+
+    var profilePicZoom: Float
+        get() = prefs.getFloat(PREF_PROFILE_PIC_ZOOM, 1.0f)
+        set(value) = prefs.edit().putFloat(PREF_PROFILE_PIC_ZOOM, value).apply()
+
+    var profilePicPanX: Float
+        get() = prefs.getFloat(PREF_PROFILE_PIC_PAN_X, 0f)
+        set(value) = prefs.edit().putFloat(PREF_PROFILE_PIC_PAN_X, value).apply()
+
+    var profilePicPanY: Float
+        get() = prefs.getFloat(PREF_PROFILE_PIC_PAN_Y, 0f)
+        set(value) = prefs.edit().putFloat(PREF_PROFILE_PIC_PAN_Y, value).apply()
+
+    var wpScaleMode: String
+        get() = prefs.getString(PREF_WP_SCALE_MODE, "fit") ?: "fit"
+        set(value) = prefs.edit().putString(PREF_WP_SCALE_MODE, value).apply()
+
+    var wpZoom: Float
+        get() = prefs.getFloat(PREF_WP_ZOOM, 1.0f)
+        set(value) = prefs.edit().putFloat(PREF_WP_ZOOM, value).apply()
+
+    var wpOffsetX: Int
+        get() = prefs.getInt(PREF_WP_OFFSET_X, 0)
+        set(value) = prefs.edit().putInt(PREF_WP_OFFSET_X, value).apply()
+
+    var wpOffsetY: Int
+        get() = prefs.getInt(PREF_WP_OFFSET_Y, 0)
+        set(value) = prefs.edit().putInt(PREF_WP_OFFSET_Y, value).apply()
 
     fun getOrderedFavorites(): MutableList<String> {
         val raw = prefs.getString(PREF_FAVORITES_ORDER, null)
