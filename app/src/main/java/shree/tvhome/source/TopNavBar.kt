@@ -310,10 +310,10 @@ class TopNavBar(
                 if (rawBmp != null) {
                     val zoom = lp.prefs.getFloat("profile_pic_zoom", 1.0f)
                     avatarImageView.setImageBitmap(makeCircularBitmap(rawBmp))
-                    avatarImageView.scaleX = zoom
-                    avatarImageView.scaleY = zoom
+                    avatarImageView.scaleX = 1.0f
+                    avatarImageView.scaleY = 1.0f
                     avatarImageView.visibility = View.VISIBLE
-                    avatarInitialTv.visibility = View.GONE
+
                     return
                 }
             } catch (_: Exception) {}
