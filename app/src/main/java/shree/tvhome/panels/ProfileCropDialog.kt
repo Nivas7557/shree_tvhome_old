@@ -151,8 +151,12 @@ object ProfileCropDialog {
                 CropBtnSpec("✕ Remove", 1f) {
                     rawBitmap = null
                     zoom = 1.0f; panX = 0f; panY = 0f
-                    lp.prefs.edit().remove("profile_pic_uri").putFloat("profile_pic_zoom", 1f)
-                        .putFloat("profile_pic_pan_x", 0f).putFloat("profile_pic_pan_y", 0f).apply()
+                    lp.prefs.edit()
+                        .remove(LauncherPreferences.PREF_PROFILE_PIC_URI)
+                        .putFloat(LauncherPreferences.PREF_PROFILE_PIC_ZOOM, 1f)
+                        .putFloat(LauncherPreferences.PREF_PROFILE_PIC_PAN_X, 0f)
+                        .putFloat(LauncherPreferences.PREF_PROFILE_PIC_PAN_Y, 0f)
+                        .apply()
                     cropPreview.invalidate()
                     onSaved()
                 }
@@ -193,11 +197,9 @@ object ProfileCropDialog {
 
         actionRow.addView(makeGlossBtn(ctx, lp, "✓  Save Profile", true) {
             lp.userName = nameInput.text.toString().trim()
-            lp.prefs.edit()
-                .putFloat("profile_pic_zoom", zoom)
-                .putFloat("profile_pic_pan_x", panX)
-                .putFloat("profile_pic_pan_y", panY)
-                .apply()
+            lp.profilePicZoom = zoom
+            lp.profilePicPanX = panX
+            lp.profilePicPanY = panY
             onSaved()
             Toast.makeText(ctx, "Profile saved!", Toast.LENGTH_SHORT).show()
             dialog.dismiss()
