@@ -2,11 +2,13 @@ package shree.tvhome
 
 import android.animation.LayoutTransition
 import android.animation.ValueAnimator
+import android.Manifest
 import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Typeface
