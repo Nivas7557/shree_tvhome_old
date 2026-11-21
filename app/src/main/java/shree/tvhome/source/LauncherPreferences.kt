@@ -6,6 +6,21 @@ import android.content.SharedPreferences
 class LauncherPreferences(context: Context) {
 
     companion object {
+        const val PREFS = "launcher_preferences"
+        const val PREF_ACCENT = "accent_color"
+        const val PREF_ACCENT_NAME = "accent_name"
+        const val PREF_TILE_SIZE = "tile_size"
+        const val PREF_TILE_SHAPE = "tile_shape"
+        const val PREF_TILE_COLOR = "tile_color"
+        const val PREF_BADGE = "icon_badge"
+        const val PREF_COLUMNS = "grid_columns"
+        const val PREF_PANEL_WIDTH = "panel_width_pct"
+        const val PREF_WALLPAPER = "custom_wallpaper_uri"
+        const val PREF_FAVORITES = "favorites"
+        const val PREF_FAVORITES_ORDER = "favorites_ordered_list"
+        const val PREF_HIDDEN_APPS = "hidden_apps_set"
+        const val PREF_USER_NAME = "launcher_user_name"
+        const val PREF_GREETING_PHRASE = "launcher_greeting_phrase"
         const val PREF_SORT_ASC = "sort_ascending"
         const val PREF_SORT_ORDER = "sort_order"
         const val PREF_LIVE_WP_MODE = "live_wp_mode"
@@ -84,10 +99,6 @@ class LauncherPreferences(context: Context) {
     var greetingPhrase: String
         get() = prefs.getString(PREF_GREETING_PHRASE, "") ?: ""
         set(value) = prefs.edit().putString(PREF_GREETING_PHRASE, value).apply()
-
-    var isSortAscending: Boolean
-        get() = prefs.getBoolean(PREF_SORT_ASC, true)
-        set(value) = prefs.edit().putBoolean(PREF_SORT_ASC, value).apply()
 
     var sortOrder: String
         get() = prefs.getString(PREF_SORT_ORDER, "az") ?: "az"
