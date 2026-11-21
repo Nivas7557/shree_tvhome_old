@@ -47,6 +47,12 @@ class LauncherPreferences(context: Context) {
         const val PREF_CACHED_CITY = "cached_city"
         const val PREF_SAVED_LAT = "saved_lat"
         const val PREF_SAVED_LON = "saved_lon"
+
+        // Display & Picture Mode Keys
+        const val PREF_PICTURE_MODE = "picture_mode"
+        const val PREF_CUSTOM_BRIGHTNESS = "custom_brightness_pct"
+        const val PREF_CUSTOM_WARMTH = "custom_warmth_pct"
+        
     }
 
     val prefs: SharedPreferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -155,6 +161,18 @@ class LauncherPreferences(context: Context) {
     var wpOffsetY: Int
         get() = prefs.getInt(PREF_WP_OFFSET_Y, 0)
         set(value) = prefs.edit().putInt(PREF_WP_OFFSET_Y, value).apply()
+
+    var pictureMode: String
+        get() = prefs.getString(PREF_PICTURE_MODE, "Standard") ?: "Standard"
+        set(value) = prefs.edit().putString(PREF_PICTURE_MODE, value).apply()
+
+    var customBrightnessPct: Int
+        get() = prefs.getInt(PREF_CUSTOM_BRIGHTNESS, 80).coerceIn(10, 100)
+        set(value) = prefs.edit().putInt(PREF_CUSTOM_BRIGHTNESS, value.coerceIn(10, 100)).apply()
+
+    var customWarmthPct: Int
+        get() = prefs.getInt(PREF_CUSTOM_WARMTH, 0).coerceIn(0, 75)
+        set(value) = prefs.edit().putInt(PREF_CUSTOM_WARMTH, value.coerceIn(0, 75)).apply()
 
     fun getOrderedFavorites(): MutableList<String> {
         val raw = prefs.getString(PREF_FAVORITES_ORDER, null)
