@@ -6,22 +6,32 @@ import android.content.SharedPreferences
 class LauncherPreferences(context: Context) {
 
     companion object {
-        const val PREFS = "launcher_preferences"
-        const val PREF_ACCENT = "accent_color"
-        const val PREF_ACCENT_NAME = "accent_name"
-        const val PREF_TILE_SIZE = "tile_size"
-        const val PREF_TILE_SHAPE = "tile_shape"
-        const val PREF_TILE_COLOR = "tile_color"
-        const val PREF_BADGE = "icon_badge"
-        const val PREF_COLUMNS = "grid_columns"
-        const val PREF_PANEL_WIDTH = "panel_width_pct"
-        const val PREF_WALLPAPER = "custom_wallpaper_uri"
-        const val PREF_FAVORITES = "favorites"
-        const val PREF_FAVORITES_ORDER = "favorites_ordered_list"
-        const val PREF_HIDDEN_APPS = "hidden_apps_set"
-        const val PREF_USER_NAME = "launcher_user_name"
-        const val PREF_GREETING_PHRASE = "launcher_greeting_phrase"
         const val PREF_SORT_ASC = "sort_ascending"
+        const val PREF_SORT_ORDER = "sort_order"
+        const val PREF_LIVE_WP_MODE = "live_wp_mode"
+        const val PREF_PHOTO_WEATHER_AURA = "photo_weather_aura"
+        const val PREF_CACHED_WEATHER_CODE = "cached_weather_code"
+        const val PREF_MOTION_STYLE = "motion_style"
+        const val PREF_WEATHER_CITY = "weather_city"
+
+        // Profile Pic Keys
+        const val PREF_PROFILE_PIC_URI = "profile_pic_uri"
+        const val PREF_PROFILE_PIC_ZOOM = "profile_pic_zoom"
+        const val PREF_PROFILE_PIC_PAN_X = "profile_pic_pan_x"
+        const val PREF_PROFILE_PIC_PAN_Y = "profile_pic_pan_y"
+
+        // Wallpaper Transform Keys
+        const val PREF_WP_SCALE_MODE = "wp_scale_mode"
+        const val PREF_WP_ZOOM = "wp_zoom"
+        const val PREF_WP_OFFSET_X = "wp_offset_x"
+        const val PREF_WP_OFFSET_Y = "wp_offset_y"
+
+        // Weather Cache Keys
+        const val PREF_CACHED_TEMP = "cached_temp"
+        const val PREF_CACHED_COND = "cached_cond"
+        const val PREF_CACHED_CITY = "cached_city"
+        const val PREF_SAVED_LAT = "saved_lat"
+        const val PREF_SAVED_LON = "saved_lon"
     }
 
     val prefs: SharedPreferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
