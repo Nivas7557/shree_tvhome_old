@@ -160,15 +160,15 @@ object LauncherBackground {
         if (wallpaper != null) {
             root.background = null
             val image = ImageView(ctx).apply {
-                scaleType = when (sp.getString("wp_scale_mode", "fit")) {
+                scaleType = when (lp.wpScaleMode) {
                     "width" -> ImageView.ScaleType.FIT_XY
                     "height" -> ImageView.ScaleType.FIT_CENTER
                     else -> ImageView.ScaleType.CENTER_CROP
                 }
-                baseZoom = maxOf(1.08f, sp.getFloat("wp_zoom", 1.0f))
-                baseOffsetY = sp.getInt("wp_offset_y", 0)
+                baseZoom = maxOf(1.08f, lp.wpZoom)
+                baseOffsetY = lp.wpOffsetY
                 scaleX = baseZoom; scaleY = baseZoom
-                translationX = sp.getInt("wp_offset_x", 0).toFloat()
+                translationX = lp.wpOffsetX.toFloat()
                 translationY = baseOffsetY.toFloat()
                 val bmp = decodeSampledBitmapFromUri(ctx, Uri.parse(wallpaper))
                 if (bmp != null) setImageBitmap(bmp)
