@@ -97,14 +97,18 @@ object AppGridManager {
 
         val sizeSpec = TileThemePalette.getTileSizeSpec(lp.tileSize)
         val screenW = ctx.resources.displayMetrics.widthPixels
-        val sidePad = dp(ctx, 64)
+        val sidePad = dp(ctx, 48)
         val gap = dp(ctx, 12)
-        val colCount = maxOf(1, lp.columns)
-        val baseAvailableW = screenW - sidePad
-        val baseCellW = (baseAvailableW - (gap * (colCount - 1))) / colCount
+        val minStageW = dp(ctx, TileThemePalette.PANEL_MIN_WIDTH_DP)
+        val rightStageW = maxOf(minStageW, (screenW * (lp.panelWidthPct / 100f)).toInt())
+        val baseAvailableW = maxOf(dp(ctx, 200), screenW - sidePad - rightStageW - dp(ctx, 6))
+        val desiredTilePx = dp(ctx, sizeSpec.desiredGridDp)
+        val colCount = ((baseAvailableW + gap) / (desiredTilePx + gap)).coerceIn(TileThemePalette.GRID_COL_RANGE)
+        val baseCellW = maxOf(1, (baseAvailableW - (gap * (colCount - 1))) / colCount)
         val tileW = (baseCellW * sizeSpec.hiddenScale).toInt()
         val tileH = (tileW * 0.85f).toInt()
-        val sideMargin = maxOf(0, ((baseAvailableW - (gap * (colCount - 1))) / colCount - tileW) / 2)
+        val sideMargin = maxOf(0, (baseCellW - tileW) / 2)
+
 
         hiddenRow.setPadding(sideMargin, 0, sideMargin, 0)
         hiddenRow.removeAllViews()
