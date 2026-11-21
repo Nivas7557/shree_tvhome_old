@@ -117,25 +117,25 @@ object WallpaperEditorPanel {
 
             addSection(ctx, panel, "PHOTO FIT & ZOOM")
             val curScaleMode = lp.prefs.getString("wp_scale_mode", "fit") ?: "fit"
+            val curScaleMode = lp.wpScaleMode
             addPillRow(ctx, panel, lp, "fit", listOf("Fit Screen", "Fill Screen"), listOf(curScaleMode == "fit", curScaleMode == "width")) { idx ->
-                val modeVal = if (idx == 0) "fit" else "width"
-                lp.prefs.edit().putString("wp_scale_mode", modeVal).apply()
+                lp.wpScaleMode = if (idx == 0) "fit" else "width"
                 onLiveUpdate()
                 rebuild(ctx, panel, lp, onLiveUpdate, onPickNewImage, onDone)
             }
             addPillRow(ctx, panel, lp, "zoom", listOf("Zoom -", "Reset", "Zoom +"), listOf(false, false, false)) { idx ->
-                val sp = lp.prefs
-                var z = sp.getFloat("wp_zoom", 1.0f)
+                var z = lp.wpZoom
                 z = when (idx) { 0 -> maxOf(1.0f, z - 0.1f); 1 -> 1.08f; else -> minOf(2.2f, z + 0.1f) }
-                sp.edit().putFloat("wp_zoom", z).apply()
+                lp.wpZoom = z
                 onLiveUpdate()
             }
             addPillRow(ctx, panel, lp, "pos", listOf("⬅", "⬆", "⬇", "➡"), listOf(false, false, false, false)) { idx ->
-                val sp = lp.prefs
-                var ox = sp.getInt("wp_offset_x", 0); var oy = sp.getInt("wp_offset_y", 0)
+                var ox = lp.wpOffsetX
+                var oy = lp.wpOffsetY
                 val step = dp(ctx, 24)
                 when (idx) { 0 -> ox -= step; 1 -> oy -= step; 2 -> oy += step; else -> ox += step }
-                sp.edit().putInt("wp_offset_x", ox).putInt("wp_offset_y", oy).apply()
+                lp.wpOffsetX = ox
+                lp.wpOffsetY = oy
                 onLiveUpdate()
             }
         }
