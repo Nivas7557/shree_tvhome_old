@@ -2,6 +2,9 @@ package shree.tvhome.panels
 
 import android.annotation.SuppressLint
 import android.app.Dialog
+import android.Manifest
+import android.app.Activity
+import android.content.pm.PackageManager
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
