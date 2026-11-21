@@ -15,12 +15,12 @@ import android.text.TextUtils
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import shree.tvhome.FocusTrap
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
+import shree.tvhome.FocusTrap
 import shree.tvhome.design.AppGridManager
 import shree.tvhome.source.LauncherPreferences
 import shree.tvhome.source.LauncherUtils
@@ -131,7 +131,7 @@ class SideControlDrawer(
         drawerLayout.post {
             FocusTrap.focusFirstInPanel(activePanel, drawerLayout)
         }
-        
+
         if (!wasOpen) {
             MotionEngine.resetTransform(drawerLayout)
             MotionEngine.animatePanelEnter(drawerLayout, stageWidget, dynamicDrawerW, lp.motionStyle) {}
@@ -150,7 +150,6 @@ class SideControlDrawer(
         }
         drawerLayout.post { onLiveRefresh() }
     }
-
     private fun setupDrawerSkeleton() {
         drawerLayout.removeAllViews()
         drawerLayout.setPadding(dp(14f), dp(14f), dp(14f), dp(14f))
@@ -285,7 +284,6 @@ class SideControlDrawer(
         }
         panel.addView(ramCard, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(4f); bottomMargin = dp(6f) })
     }
-
     private fun getCurrentSystemBrightnessPct(): Int = try {
         val raw = Settings.System.getInt(context.contentResolver, Settings.System.SCREEN_BRIGHTNESS, 200)
         ((raw / 255f) * 100f).toInt().coerceIn(10, 100)
@@ -332,7 +330,7 @@ class SideControlDrawer(
         addLabel(panel, "PICTURE PRESET MODES")
         val presetCards = ArrayList<Pair<LinearLayout, TextView>>()
 
-        picturePresets.forEachIndexed { idx, preset ->
+        picturePresets.forEach { preset ->
             val isSel = selectedPicturePreset == preset.name
             val titleTv = text(if (isSel) "✓  ${preset.name}" else "○  ${preset.name}", 10.5f, if (isSel) lp.accentColor else Color.WHITE, true)
             val card = LinearLayout(context).apply {
@@ -443,7 +441,7 @@ class SideControlDrawer(
             listHolder.addView(text("No active notifications right now", 10.5f, Color.argb(180, 210, 230, 250), false).apply { gravity = Gravity.CENTER; setPadding(0, dp(28f), 0, dp(28f)) })
             return
         }
-        for (item in alerts) {
+         for (item in alerts) {
             val card = LinearLayout(context).apply {
                 orientation = LinearLayout.VERTICAL; setPadding(dp(11f), dp(9f), dp(11f), dp(9f)); isFocusable = true; background = glassCardBg(false)
                 setOnFocusChangeListener { v, f -> MotionEngine.animateFocus(v, f, lp.motionStyle, 1.02f, 4f); v.background = glassCardBg(f) }
