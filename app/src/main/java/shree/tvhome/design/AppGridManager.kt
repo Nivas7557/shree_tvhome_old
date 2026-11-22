@@ -275,10 +275,15 @@ object AppGridManager {
             fluidGrid.updateGridState(targetCols, tileW, tileH, gap, animate = true)
         }
 
-        if (shouldRequestFocus && !isDrawerOpen && restorePkg != null) {
-            val restoreView = favRow.findViewWithTag<View>("fav_$restorePkg")
-                ?: fluidGrid.findViewWithTag<View>("all_$restorePkg")
-            restoreView?.requestFocus()
+        // Dynamically focus restored package or fallback to the very first available app tile on fresh launch
+        if (shouldRequestFocus && !isDrawerOpen) {
+            val targetView = if (restorePkg != null) {
+                favRow.findViewWithTag<View>("fav_$restorePkg")
+                    ?: fluidGrid.findViewWithTag<View>("all_$restorePkg")
+            } else {
+                favRow.getChildAt(0) ?: fluidGrid.getChildAt(0)
+            }
+            targetView?.post { targetView.requestFocus() }
         }
     }
 
