@@ -198,6 +198,19 @@ class LauncherPreferences(context: Context) {
         get() = prefs.getInt(PREF_CUSTOM_WARMTH, 0).coerceIn(0, 75)
         set(value) = prefs.edit().putInt(PREF_CUSTOM_WARMTH, value.coerceIn(0, 75)).apply()
 
+    // Nameplate modes: "always", "focus", "hidden"
+    var nameplateMode: String
+        get() = prefs.getString(PREF_NAMEPLATE_MODE, "always") ?: "always"
+        set(value) = prefs.edit().putString(PREF_NAMEPLATE_MODE, value).apply()
+
+    var dndEnabled: Boolean
+        get() = prefs.getBoolean(PREF_DND_ENABLED, false)
+        set(value) = prefs.edit().putBoolean(PREF_DND_ENABLED, value).apply()
+
+    var sleepTimerEndMs: Long
+        get() = prefs.getLong(PREF_SLEEP_TIMER_END_MS, 0L)
+        set(value) = prefs.edit().putLong(PREF_SLEEP_TIMER_END_MS, value).apply()
+
     fun getOrderedFavorites(): MutableList<String> {
         val raw = prefs.getString(PREF_FAVORITES_ORDER, null)
         if (!raw.isNullOrEmpty()) {
