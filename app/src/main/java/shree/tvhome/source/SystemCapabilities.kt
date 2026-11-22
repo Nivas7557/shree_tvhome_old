@@ -1,5 +1,7 @@
 package shree.tvhome.source
 
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
 import android.media.AudioDeviceInfo
@@ -40,16 +42,31 @@ object SystemCapabilities {
         AudioDeviceInfo.TYPE_WIRED_HEADPHONES to "Wired Audio"
     )
 
+    fun hasBluetoothHardware(ctx: Context): Boolean {
+        val bm = ctx.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
+        val adapter = bm?.adapter ?: @Suppress("DEPRECATION") BluetoothAdapter.getDefaultAdapter()
+        return adapter != null
+    }
+
+    fun isVolumeFixed(ctx: Context): Boolean {
+        val am = ctx.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return false
+        return am.isVolumeFixed
+    }
+
+    fun resolveIntent(ctx: Context, action: String): Intent? {
+        val intent = Intent(action)
+        return if (intent.resolveActivity(ctx.packageManager) != null) intent else null
+    }
+
     fun getAvailableSettings(ctx: Context, filterActions: Set<String>? = null): List<DiscoveredSetting> {
         val pm = ctx.packageManager
         val catalog = listOf(
-            DiscoveredSetting("⚙", "TV Settings", "System & device preferences", Intent(Settings.ACTION_SETTINGS)),
-            DiscoveredSetting("📺", "Display Settings", "Screen, resolution & display options", Intent(Settings.ACTION_DISPLAY_SETTINGS)),
-            DiscoveredSetting("🔊", "Sound Settings", "Audio & volume system settings", Intent(Settings.ACTION_SOUND_SETTINGS)),
-            DiscoveredSetting("📶", "Network Settings", "Wi-Fi & network settings", Intent(Settings.ACTION_WIFI_SETTINGS)),
-            DiscoveredSetting("🔵", "Bluetooth Settings", "Pair or manage Bluetooth devices", Intent(Settings.ACTION_BLUETOOTH_SETTINGS)),
-            DiscoveredSetting("📦", "Installed Apps", "System application manager", Intent(Settings.ACTION_APPLICATION_SETTINGS)),
-            DiscoveredSetting("🔔", "Notification Access", "System notification listeners", Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+            DiscoveredSetting("⚙", "TV Device Settings", "Full system & device preferences", Intent(Settings.ACTION_SETTINGS)),
+            DiscoveredSetting("📺", "TV Picture & Display", "Hardware sharpness, contrast & resolution", Intent(Settings.ACTION_DISPLAY_SETTINGS)),
+            DiscoveredSetting("🔊", "TV Sound & Dolby", "System audio & equalizer settings", Intent(Settings.ACTION_SOUND_SETTINGS)),
+            DiscoveredSetting("📶", "Network Settings", "Advanced IP, proxy & ethernet", Intent(Settings.ACTION_WIFI_SETTINGS)),
+            DiscoveredSetting("🔵", "Bluetooth Pairing", "Pair new remotes & gamepads", Intent(Settings.ACTION_BLUETOOTH_SETTINGS)),
+            DiscoveredSetting("📦", "System App Manager", "All system & background apps", Intent(Settings.ACTION_APPLICATION_SETTINGS))
         )
         return catalog.filter { item ->
             val actionMatches = filterActions == null || item.intent.action in filterActions

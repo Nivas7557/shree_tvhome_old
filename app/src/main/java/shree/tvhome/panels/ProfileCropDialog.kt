@@ -37,10 +37,11 @@ object ProfileCropDialog {
         val dialog = Dialog(ctx)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
 
-        var zoom = lp.prefs.getFloat("profile_pic_zoom", 1.0f)
-        var panX = lp.prefs.getFloat("profile_pic_pan_x", 0f)
-        var panY = lp.prefs.getFloat("profile_pic_pan_y", 0f)
-        var rawBitmap: Bitmap? = loadUserBitmap(ctx, lp.prefs.getString("profile_pic_uri", null))
+        var zoom = lp.profilePicZoom
+        var panX = lp.profilePicPanX
+        var panY = lp.profilePicPanY
+        var rawBitmap: Bitmap? = loadUserBitmap(ctx, lp.profilePicUri)
+
 
         val rootGlass = LinearLayout(ctx).apply {
             orientation = LinearLayout.VERTICAL
@@ -150,8 +151,12 @@ object ProfileCropDialog {
                 CropBtnSpec("✕ Remove", 1f) {
                     rawBitmap = null
                     zoom = 1.0f; panX = 0f; panY = 0f
-                    lp.prefs.edit().remove("profile_pic_uri").putFloat("profile_pic_zoom", 1f)
-                        .putFloat("profile_pic_pan_x", 0f).putFloat("profile_pic_pan_y", 0f).apply()
+                    lp.prefs.edit()
+                        .remove(LauncherPreferences.PREF_PROFILE_PIC_URI)
+                        .putFloat(LauncherPreferences.PREF_PROFILE_PIC_ZOOM, 1f)
+                        .putFloat(LauncherPreferences.PREF_PROFILE_PIC_PAN_X, 0f)
+                        .putFloat(LauncherPreferences.PREF_PROFILE_PIC_PAN_Y, 0f)
+                        .apply()
                     cropPreview.invalidate()
                     onSaved()
                 }
@@ -192,11 +197,9 @@ object ProfileCropDialog {
 
         actionRow.addView(makeGlossBtn(ctx, lp, "✓  Save Profile", true) {
             lp.userName = nameInput.text.toString().trim()
-            lp.prefs.edit()
-                .putFloat("profile_pic_zoom", zoom)
-                .putFloat("profile_pic_pan_x", panX)
-                .putFloat("profile_pic_pan_y", panY)
-                .apply()
+            lp.profilePicZoom = zoom
+            lp.profilePicPanX = panX
+            lp.profilePicPanY = panY
             onSaved()
             Toast.makeText(ctx, "Profile saved!", Toast.LENGTH_SHORT).show()
             dialog.dismiss()

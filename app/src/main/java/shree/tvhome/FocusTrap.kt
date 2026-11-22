@@ -11,9 +11,8 @@ object FocusTrap {
 
     fun findFirstFocusable(root: View): View? {
         if (root.visibility != View.VISIBLE || !root.isEnabled) return null
-        val isLeafFocusable = root !is ViewGroup && (root.isFocusable || root.isClickable)
-        val isContainerFocusable = root is ViewGroup && root.isFocusable && !root.isFocusableInTouchMode && root.childCount == 0
-        if (isLeafFocusable || isContainerFocusable) {
+        // Match any leaf view or focusable ViewGroup card (even when it contains child TextViews)
+        if (root.isFocusable && !root.isFocusableInTouchMode) {
             return root
         }
         if (root is ViewGroup) {
@@ -25,11 +24,12 @@ object FocusTrap {
         return null
     }
 
+
     fun focusFirstInPanel(panel: ViewGroup?, fallbackContainer: ViewGroup? = null): Boolean {
-        if (panel != null && panel.findFocus() != null) return true
         val target = (panel?.let { findFirstFocusable(it) })
             ?: (fallbackContainer?.let { findFirstFocusable(it) })
             ?: return false
+        // Explicitly force focus onto the first focusable child without skipping to lower rows
         target.post {
             if (target.isAttachedToWindow && target.visibility == View.VISIBLE) {
                 target.requestFocus()
@@ -60,14 +60,15 @@ object FocusTrap {
         val current = drawerFocus ?: topNavBar.findFocus()
 
         if (inDrawer && current != null) {
+            // Allow horizontal SeekBar scrubbing without trapping focus
             if (current is SeekBar && (code == KeyEvent.KEYCODE_DPAD_LEFT || code == KeyEvent.KEYCODE_DPAD_RIGHT)) {
                 return false
             }
 
-            val tag = current.tag as? String ?: ""
-            if (tag.startsWith("pill_")) {
+            // Dynamic sub-menu pill handling without hardcoded tag prefixes
+            if (CustomizeMenuBuilder.isSubMenuOpen() && current.parent is ViewGroup) {
+                val subRow = current.parent as ViewGroup
                 if (code == KeyEvent.KEYCODE_DPAD_LEFT || code == KeyEvent.KEYCODE_DPAD_RIGHT) {
-                    val subRow = current.parent as? ViewGroup ?: return true
                     val dir = if (code == KeyEvent.KEYCODE_DPAD_LEFT) View.FOCUS_LEFT else View.FOCUS_RIGHT
                     FocusFinder.getInstance().findNextFocus(subRow, current, dir)?.requestFocus()
                     return true
@@ -77,8 +78,20 @@ object FocusTrap {
                     return true
                 }
             }
+
+            // Restrict horizontal navigation strictly to sibling views in the same row
+            if (code == KeyEvent.KEYCODE_DPAD_LEFT || code == KeyEvent.KEYCODE_DPAD_RIGHT) {
+                val dir = if (code == KeyEvent.KEYCODE_DPAD_LEFT) View.FOCUS_LEFT else View.FOCUS_RIGHT
+                val rowParent = current.parent as? ViewGroup
+                val nextSibling = rowParent?.let { FocusFinder.getInstance().findNextFocus(it, current, dir) }
+                if (nextSibling != null && nextSibling !== current) {
+                    nextSibling.requestFocus()
+                }
+                return true
+            }
         }
 
+        // Entering drawer from TopNavBar via DPAD_DOWN
         if (code == KeyEvent.KEYCODE_DPAD_DOWN && !inDrawer && current != null) {
             focusFirstInPanel(activePanel, drawerLayout)
             return true
@@ -93,16 +106,19 @@ object FocusTrap {
                 else -> View.FOCUS_DOWN
             }
             val next = FocusFinder.getInstance().findNextFocus(container, current, dir)
-            if (next != null) {
+            if (next != null && next !== current) {
                 next.requestFocus()
                 return true
             }
 
+            // Exiting top of drawer returns focus dynamically to the active TopNavBar trigger
             if (inDrawer && code == KeyEvent.KEYCODE_DPAD_UP) {
                 val parentBtn = if (activeParentTag.isNotEmpty()) {
                     topNavBar.findViewWithTag<View>(activeParentTag)
-                } else null
-                (parentBtn ?: topNavBar.findViewWithTag("nav_customize"))?.requestFocus()
+                } else {
+                    findFirstFocusable(topNavBar)
+                }
+                parentBtn?.requestFocus()
                 return true
             }
             return true

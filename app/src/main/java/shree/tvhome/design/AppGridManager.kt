@@ -8,6 +8,7 @@ import android.content.pm.ResolveInfo
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.View
@@ -39,7 +40,8 @@ object AppGridManager {
         onSortChanged: (() -> Unit)? = null
     ): LinearLayout {
         return LinearLayout(ctx).apply {
-            orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(ctx, 2), dp(ctx, 4), dp(ctx, 2), dp(ctx, 8))
             addView(
                 View(ctx).apply {
@@ -51,17 +53,28 @@ object AppGridManager {
                 LinearLayout.LayoutParams(dp(ctx, 8), dp(ctx, 8)).apply { rightMargin = dp(ctx, 8) }
             )
             addView(TextView(ctx).apply {
-                text = title; textSize = 11.5f; typeface = Typeface.DEFAULT_BOLD
-                letterSpacing = 0.08f; setTextColor(Color.argb(235, 225, 238, 255))
+                text = title
+                textSize = 11.5f
+                typeface = Typeface.DEFAULT_BOLD
+                letterSpacing = 0.08f
+                setTextColor(Color.argb(235, 225, 238, 255))
             })
             addView(View(ctx), LinearLayout.LayoutParams(0, 1, 1f))
             if (!isFav && lp != null && onSortChanged != null) {
                 val sortPill = TextView(ctx).apply {
                     text = if (lp.sortOrder == "za") "⇅  Z-A ORDER" else "⇅  A-Z ORDER"
-                    textSize = 10f; typeface = Typeface.DEFAULT_BOLD; setTextColor(Color.WHITE)
-                    isSingleLine = true; maxLines = 1
-                    setPadding(dp(ctx, 12), dp(ctx, 4), dp(ctx, 12), dp(ctx, 4)); isFocusable = true; background = badgeBg(ctx, false)
-                    setOnFocusChangeListener { v, f -> LauncherUtils.applyFocusSpring(v, f, 1.05f, 4f); v.background = badgeBg(ctx, f) }
+                    textSize = 10f
+                    typeface = Typeface.DEFAULT_BOLD
+                    setTextColor(Color.WHITE)
+                    isSingleLine = true
+                    maxLines = 1
+                    setPadding(dp(ctx, 12), dp(ctx, 4), dp(ctx, 12), dp(ctx, 4))
+                    isFocusable = true
+                    background = badgeBg(ctx, false)
+                    setOnFocusChangeListener { v, f ->
+                        LauncherUtils.applyFocusSpring(v, f, 1.05f, 4f)
+                        v.background = badgeBg(ctx, f)
+                    }
                     setOnClickListener {
                         lp.sortOrder = if (lp.sortOrder == "za") "az" else "za"
                         text = if (lp.sortOrder == "za") "⇅  Z-A ORDER" else "⇅  A-Z ORDER"
@@ -71,9 +84,13 @@ object AppGridManager {
                 addView(sortPill, LinearLayout.LayoutParams(-2, -2).apply { rightMargin = dp(ctx, 8) })
             }
             addView(TextView(ctx).apply {
-                tag = "count_tv"; text = "0 Apps"; textSize = 10f; typeface = Typeface.DEFAULT_BOLD
+                tag = "count_tv"
+                text = "0 Apps"
+                textSize = 10f
+                typeface = Typeface.DEFAULT_BOLD
                 setTextColor(Color.argb(220, 215, 235, 255))
-                setPadding(dp(ctx, 11), dp(ctx, 4), dp(ctx, 11), dp(ctx, 4)); background = badgeBg(ctx, false)
+                setPadding(dp(ctx, 11), dp(ctx, 4), dp(ctx, 11), dp(ctx, 4))
+                background = badgeBg(ctx, false)
             })
         }
     }
@@ -97,14 +114,18 @@ object AppGridManager {
 
         val sizeSpec = TileThemePalette.getTileSizeSpec(lp.tileSize)
         val screenW = ctx.resources.displayMetrics.widthPixels
-        val sidePad = dp(ctx, 64)
-        val gap = dp(ctx, 12)
-        val colCount = maxOf(1, lp.columns)
-        val baseAvailableW = screenW - sidePad
-        val baseCellW = (baseAvailableW - (gap * (colCount - 1))) / colCount
+        // Scale side padding and grid gaps proportionally to screen width
+        val sidePad = (screenW * 0.035f).toInt()
+        val gap = maxOf(dp(ctx, 8), (screenW * 0.009f).toInt())
+        val minStageW = dp(ctx, TileThemePalette.PANEL_MIN_WIDTH_DP)
+        val rightStageW = maxOf(minStageW, (screenW * (lp.panelWidthPct / 100f)).toInt())
+        val baseAvailableW = maxOf(dp(ctx, 200), screenW - sidePad - rightStageW - dp(ctx, 6))
+        val desiredTilePx = dp(ctx, sizeSpec.desiredGridDp)
+        val colCount = ((baseAvailableW + gap) / (desiredTilePx + gap)).coerceIn(TileThemePalette.GRID_COL_RANGE)
+        val baseCellW = maxOf(1, (baseAvailableW - (gap * (colCount - 1))) / colCount)
         val tileW = (baseCellW * sizeSpec.hiddenScale).toInt()
         val tileH = (tileW * 0.85f).toInt()
-        val sideMargin = maxOf(0, ((baseAvailableW - (gap * (colCount - 1))) / colCount - tileW) / 2)
+        val sideMargin = maxOf(0, (baseCellW - tileW) / 2)
 
         hiddenRow.setPadding(sideMargin, 0, sideMargin, 0)
         hiddenRow.removeAllViews()
@@ -173,8 +194,9 @@ object AppGridManager {
 
         val sizeSpec = TileThemePalette.getTileSizeSpec(lp.tileSize)
         val screenW = ctx.resources.displayMetrics.widthPixels
-        val sidePad = dp(ctx, 48)
-        val gap = dp(ctx, 12)
+        // Scale grid padding and spacing dynamically based on display resolution
+        val sidePad = (screenW * 0.035f).toInt()
+        val gap = maxOf(dp(ctx, 8), (screenW * 0.009f).toInt())
         val minStageW = dp(ctx, TileThemePalette.PANEL_MIN_WIDTH_DP)
         val rightStageW = maxOf(minStageW, (screenW * (lp.panelWidthPct / 100f)).toInt())
         val currentAvailableW = maxOf(dp(ctx, 200), screenW - sidePad - rightStageW - dp(ctx, 6))
@@ -186,7 +208,6 @@ object AppGridManager {
         val tileW = maxOf(1, (cellW * 0.94f).toInt())
         val extraNameplateH = LauncherUtils.dp(ctx, 28)
         val tileH = maxOf(1, (tileW * 0.86f).toInt() + extraNameplateH)
-
         val sideMargin = maxOf(0, (cellW - tileW) / 2)
 
         val currentFavSig = favApps.joinToString { it.activityInfo.packageName }
@@ -200,18 +221,18 @@ object AppGridManager {
             if (currentFavSig != lastFavSignature) {
                 favRow.removeAllViews()
                 favApps.forEachIndexed { idx, info ->
-                    val tile = AppTileFactory.create(
-                        ctx, pm, lp, info, isFavRow = true, isFav = true,
-                        canMoveLeft = idx > 0, canMoveRight = idx < favApps.lastIndex,
-                        w = tileW, h = tileH, actions = actions
-                    )
-                    val p = LinearLayout.LayoutParams(tileW, tileH).apply {
-                        if (idx < favApps.lastIndex) rightMargin = gap
+                val tile = AppTileFactory.create(
+                    ctx, pm, lp, info, isFavRow = true, isFav = true,
+                    canMoveLeft = idx > 0, canMoveRight = idx < favApps.lastIndex,
+                    w = tileW, h = tileH, actions = actions
+                    )            
+                val p = LinearLayout.LayoutParams(tileW, tileH).apply {
+                    if (idx < favApps.lastIndex) rightMargin = gap
                     }
-                    favRow.addView(tile, p)
-                }
-                lastFavSignature = currentFavSig
-            } else {
+                favRow.addView(tile, p)
+            }
+            lastFavSignature = currentFavSig
+                } else {
                 for (i in 0 until favRow.childCount) {
                     val child = favRow.getChildAt(i)
                     AppTileFactory.updateTileAppearance(ctx, child, lp, isFav = true)
@@ -252,10 +273,12 @@ object AppGridManager {
             (fluidGrid.layoutParams as? LinearLayout.LayoutParams)?.let { p ->
                 if (p.leftMargin != sideMargin || p.rightMargin != sideMargin) {
                     ValueAnimator.ofInt(p.leftMargin, sideMargin).apply {
-                        duration = 320L; interpolator = LauncherUtils.FLUID_SPRING
+                        duration = 320L
+                        interpolator = LauncherUtils.FLUID_SPRING
                         addUpdateListener { anim ->
                             val m = anim.animatedValue as Int
-                            p.leftMargin = m; p.rightMargin = m
+                            p.leftMargin = m
+                            p.rightMargin = m
                             fluidGrid.requestLayout()
                         }
                         start()
@@ -263,6 +286,12 @@ object AppGridManager {
                 }
             }
             fluidGrid.updateGridState(targetCols, tileW, tileH, gap, animate = true)
+        }
+
+        // Mark the first app tile as default-focused so Android TV naturally starts focus in the app drawer
+        val firstAppTile = favRow.getChildAt(0) ?: fluidGrid.getChildAt(0)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            firstAppTile?.isFocusedByDefault = true
         }
 
         if (shouldRequestFocus && !isDrawerOpen && restorePkg != null) {
@@ -274,10 +303,14 @@ object AppGridManager {
 
     private fun animateLayoutParams(view: View, w: Int, h: Int, lMargin: Int, rMargin: Int) {
         val p = view.layoutParams as? LinearLayout.LayoutParams ?: return
-        val startW = p.width; val startH = p.height; val startL = p.leftMargin; val startR = p.rightMargin
+        val startW = p.width
+        val startH = p.height
+        val startL = p.leftMargin
+        val startR = p.rightMargin
         if (startW == w && startH == h && startL == lMargin && startR == rMargin) return
         ValueAnimator.ofFloat(0f, 1f).apply {
-            duration = 320L; interpolator = LauncherUtils.FLUID_SPRING
+            duration = 320L
+            interpolator = LauncherUtils.FLUID_SPRING
             addUpdateListener { anim ->
                 val f = anim.animatedValue as Float
                 p.width = (startW + (w - startW) * f).toInt()

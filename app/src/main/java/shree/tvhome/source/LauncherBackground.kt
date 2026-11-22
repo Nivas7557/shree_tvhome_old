@@ -69,51 +69,51 @@ object LauncherBackground {
         )
     )
 
-    // Single source of truth for scenes — WallpaperEditorPanel & DynamicCanvasView read directly from SCENES
+    // Vibrant jewel-tone scenes balanced for TV glass contrast (never pale/washed-out or dull dark)
     val SCENES = listOf(
         SceneSpec(
             key = MODE_MORNING,
-            icon = "☀️",
-            name = "Morning Mist",
-            swatch = intArrayOf(Color.rgb(125, 195, 255), Color.rgb(245, 198, 165)),
-            isLightSky = true,
+            icon = "🌌",
+            name = "Aurora Jade",
+            swatch = intArrayOf(Color.rgb(16, 145, 135), Color.rgb(88, 65, 185)),
+            isLightSky = false,
             particleKind = "orb",
-            skyColors = intArrayOf(Color.rgb(168, 218, 255), Color.rgb(225, 240, 255), Color.rgb(255, 224, 198)),
-            orb1Colors = intArrayOf(Color.argb(210, 255, 242, 175), Color.argb(70, 255, 215, 130), Color.TRANSPARENT),
-            orb2Colors = intArrayOf(Color.argb(75, 92, 184, 255), Color.TRANSPARENT)
+            skyColors = intArrayOf(Color.rgb(14, 52, 88), Color.rgb(18, 138, 132), Color.rgb(76, 56, 168)),
+            orb1Colors = intArrayOf(Color.argb(195, 52, 235, 185), Color.argb(75, 32, 185, 220), Color.TRANSPARENT),
+            orb2Colors = intArrayOf(Color.argb(150, 145, 88, 255), Color.TRANSPARENT)
         ),
         SceneSpec(
             key = MODE_PASTEL,
-            icon = "🌸",
-            name = "Pastel Silk",
-            swatch = intArrayOf(Color.rgb(185, 165, 245), Color.rgb(155, 225, 205)),
-            isLightSky = true,
+            icon = "🔮",
+            name = "Prism Orchid",
+            swatch = intArrayOf(Color.rgb(125, 48, 185), Color.rgb(38, 148, 215)),
+            isLightSky = false,
             particleKind = "orb",
-            skyColors = intArrayOf(Color.rgb(214, 198, 255), Color.rgb(196, 242, 228), Color.rgb(255, 206, 228)),
-            orb1Colors = intArrayOf(Color.argb(145, 165, 225, 255), Color.TRANSPARENT),
-            orb2Colors = intArrayOf(Color.argb(135, 255, 180, 225), Color.TRANSPARENT)
+            skyColors = intArrayOf(Color.rgb(54, 24, 112), Color.rgb(138, 46, 168), Color.rgb(28, 118, 188)),
+            orb1Colors = intArrayOf(Color.argb(190, 235, 82, 185), Color.argb(70, 165, 65, 245), Color.TRANSPARENT),
+            orb2Colors = intArrayOf(Color.argb(165, 56, 215, 245), Color.TRANSPARENT)
         ),
         SceneSpec(
             key = MODE_SUNSET,
             icon = "🌇",
-            name = "Golden Sunset",
-            swatch = intArrayOf(Color.rgb(195, 68, 118), Color.rgb(255, 152, 78)),
+            name = "Velvet Sunset",
+            swatch = intArrayOf(Color.rgb(185, 48, 98), Color.rgb(245, 128, 52)),
             isLightSky = false,
             particleKind = "orb",
-            skyColors = intArrayOf(Color.rgb(52, 24, 92), Color.rgb(195, 72, 118), Color.rgb(255, 152, 82)),
-            orb1Colors = intArrayOf(Color.argb(215, 255, 210, 110), Color.argb(85, 255, 110, 95), Color.TRANSPARENT),
-            orb2Colors = intArrayOf(Color.argb(80, 255, 195, 75), Color.TRANSPARENT)
+            skyColors = intArrayOf(Color.rgb(48, 20, 86), Color.rgb(178, 46, 96), Color.rgb(235, 118, 54)),
+            orb1Colors = intArrayOf(Color.argb(215, 255, 185, 72), Color.argb(90, 245, 78, 92), Color.TRANSPARENT),
+            orb2Colors = intArrayOf(Color.argb(135, 165, 52, 168), Color.TRANSPARENT)
         ),
         SceneSpec(
             key = MODE_AQUA,
             icon = "🌊",
-            name = "Emerald Aqua",
-            swatch = intArrayOf(Color.rgb(12, 115, 152), Color.rgb(38, 192, 172)),
+            name = "Electric Lagoon",
+            swatch = intArrayOf(Color.rgb(14, 98, 175), Color.rgb(28, 198, 178)),
             isLightSky = false,
             particleKind = "orb",
-            skyColors = intArrayOf(Color.rgb(6, 58, 112), Color.rgb(18, 138, 168), Color.rgb(42, 198, 178)),
-            orb1Colors = intArrayOf(Color.argb(140, 145, 255, 238), Color.TRANSPARENT),
-            orb2Colors = intArrayOf(Color.argb(95, 75, 235, 245), Color.TRANSPARENT)
+            skyColors = intArrayOf(Color.rgb(12, 46, 108), Color.rgb(16, 125, 178), Color.rgb(26, 188, 168)),
+            orb1Colors = intArrayOf(Color.argb(185, 68, 245, 225), Color.argb(65, 32, 165, 245), Color.TRANSPARENT),
+            orb2Colors = intArrayOf(Color.argb(145, 65, 135, 255), Color.TRANSPARENT)
         ),
         SceneSpec(
             key = MODE_RAIN,
@@ -123,8 +123,8 @@ object LauncherBackground {
             isLightSky = false,
             particleKind = "rain",
             skyColors = intArrayOf(Color.rgb(16, 36, 62), Color.rgb(28, 68, 96), Color.rgb(14, 28, 48)),
-            orb1Colors = intArrayOf(Color.argb(110, 120, 195, 235), Color.TRANSPARENT),
-            orb2Colors = intArrayOf(Color.argb(70, 92, 184, 255), Color.TRANSPARENT)
+            orb1Colors = intArrayOf(Color.argb(120, 92, 195, 245), Color.TRANSPARENT),
+            orb2Colors = intArrayOf(Color.argb(85, 75, 155, 235), Color.TRANSPARENT)
         ),
         SceneSpec(
             key = MODE_COSMOS,
@@ -135,7 +135,7 @@ object LauncherBackground {
             particleKind = "star",
             skyColors = intArrayOf(Color.rgb(10, 16, 36), Color.rgb(18, 28, 56), Color.rgb(8, 12, 28)),
             orb1Colors = intArrayOf(Color.argb(220, 255, 245, 190), Color.argb(90, 255, 220, 130), Color.argb(25, 255, 200, 100), Color.TRANSPARENT),
-            orb2Colors = intArrayOf(Color.argb(65, 92, 184, 255), Color.TRANSPARENT),
+            orb2Colors = intArrayOf(Color.argb(75, 92, 184, 255), Color.TRANSPARENT),
             showMoon = true
         )
     )
@@ -160,15 +160,15 @@ object LauncherBackground {
         if (wallpaper != null) {
             root.background = null
             val image = ImageView(ctx).apply {
-                scaleType = when (sp.getString("wp_scale_mode", "fit")) {
+                scaleType = when (lp.wpScaleMode) {
                     "width" -> ImageView.ScaleType.FIT_XY
                     "height" -> ImageView.ScaleType.FIT_CENTER
                     else -> ImageView.ScaleType.CENTER_CROP
                 }
-                baseZoom = maxOf(1.08f, sp.getFloat("wp_zoom", 1.0f))
-                baseOffsetY = sp.getInt("wp_offset_y", 0)
+                baseZoom = maxOf(1.08f, lp.wpZoom)
+                baseOffsetY = lp.wpOffsetY
                 scaleX = baseZoom; scaleY = baseZoom
-                translationX = sp.getInt("wp_offset_x", 0).toFloat()
+                translationX = lp.wpOffsetX.toFloat()
                 translationY = baseOffsetY.toFloat()
                 val bmp = decodeSampledBitmapFromUri(ctx, Uri.parse(wallpaper))
                 if (bmp != null) setImageBitmap(bmp)
