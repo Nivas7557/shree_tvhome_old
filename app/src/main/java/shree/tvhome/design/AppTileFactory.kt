@@ -166,6 +166,12 @@ object AppTileFactory {
             clipChildren = false
             setStyle(lp.accentColor, lp.tileShape, lp.tileColor, appColor)
         }
+        // Lightweight shader-only update on style change without grid re-layout
+        lp.addStyleListener {
+            if (wrapper.isAttachedToWindow) {
+                innerCard.setStyle(lp.accentColor, lp.tileShape, lp.tileColor, appColor)
+            }
+        }
 
         val iv = ImageView(ctx).apply {
             tag = "tile_icon"
