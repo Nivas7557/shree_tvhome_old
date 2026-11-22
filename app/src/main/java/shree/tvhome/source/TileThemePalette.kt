@@ -178,10 +178,12 @@ object TileThemePalette {
 
     fun getGlassPanelColors(themeKey: String?, accentColor: Int, elevated: Boolean = false): IntArray {
         val base = getTheme(themeKey).normalColors
+        val topCol = base.firstOrNull() ?: Color.rgb(22, 34, 72)
+        val botCol = base.lastOrNull() ?: topCol
         val alphaBoost = if (elevated) 242 else 220
-        val c1 = LauncherUtils.withAlpha(base[0], alphaBoost)
-        val c2 = LauncherUtils.withAlpha(base[1], (alphaBoost + 8).coerceAtMost(252))
-        val c3 = LauncherUtils.blendWithAccent(base[2], accentColor, if (elevated) 0.22f else 0.14f, alphaBoost)
+        val c1 = LauncherUtils.withAlpha(topCol, alphaBoost)
+        val c2 = LauncherUtils.withAlpha(botCol, (alphaBoost + 8).coerceAtMost(252))
+        val c3 = LauncherUtils.blendWithAccent(botCol, accentColor, if (elevated) 0.22f else 0.14f, alphaBoost)
         return intArrayOf(c1, c2, c3)
     }
 
