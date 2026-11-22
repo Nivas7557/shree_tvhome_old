@@ -120,9 +120,9 @@ object TileThemePalette {
         OptionSpec("star", "★ Star"),
         OptionSpec("none", "Off")
     )
-
     val PANEL_WIDTH_OPTIONS = listOf(20, 25, 30, 35)
-    const val PANEL_MIN_WIDTH_DP = 250
+    // Allow 20% panel width on all TV screens without clamping to 25%
+    const val PANEL_MIN_WIDTH_DP = 165
     val GRID_COL_RANGE = 3..8
 
     private val themeMap by lazy { THEMES.associateBy { it.key } }
@@ -134,6 +134,16 @@ object TileThemePalette {
     fun getTopBottomColors(themeKey: String?, focused: Boolean): IntArray {
         val spec = getTheme(themeKey)
         return if (focused) spec.focusedColors else spec.normalColors
+    }
+
+    // Global glass surface gradient applied across SideDrawer, AmbientStage, and Panel Cards
+    fun getGlassPanelColors(themeKey: String?, accentColor: Int, elevated: Boolean = false): IntArray {
+        val base = getTheme(themeKey).normalColors
+        val alphaBoost = if (elevated) 238 else 210
+        val c1 = LauncherUtils.withAlpha(base[0], alphaBoost)
+        val c2 = LauncherUtils.withAlpha(base[1], (alphaBoost + 12).coerceAtMost(250))
+        val c3 = LauncherUtils.blendWithAccent(base[2], accentColor, if (elevated) 0.24f else 0.16f, alphaBoost)
+        return intArrayOf(c1, c2, c3)
     }
 
     fun getTileSizeSpec(key: String?): TileSizeSpec = sizeMap[key] ?: sizeMap["medium"] ?: TILE_SIZES.first()
