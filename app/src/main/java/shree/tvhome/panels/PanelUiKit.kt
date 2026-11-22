@@ -42,16 +42,26 @@ object PanelUiKit {
         )
     }
 
-    fun glassCardBg(ctx: Context, accent: Int, active: Boolean) = GradientDrawable(
-        GradientDrawable.Orientation.TOP_BOTTOM,
-        if (active) intArrayOf(LauncherUtils.withAlpha(accent, 135), LauncherUtils.withAlpha(accent, 65))
-        else intArrayOf(Color.argb(54, 255, 255, 255), Color.argb(24, 255, 255, 255))
+    fun glassCardBg(ctx: Context, accent: Int, active: Boolean, themeKey: String? = null) = GradientDrawable(
+        GradientDrawable.Orientation.TL_BR,
+        if (active) {
+            intArrayOf(
+                LauncherUtils.withAlpha(accent, 185),
+                LauncherUtils.withAlpha(accent, 95)
+            )
+        } else {
+            val base = TileThemePalette.getTheme(themeKey).normalColors
+            intArrayOf(
+                LauncherUtils.blendWithAccent(base[0], accent, 0.14f, 145),
+                LauncherUtils.withAlpha(base[1], 115)
+            )
+        }
     ).apply {
         cornerRadius = LauncherUtils.dpF(ctx, 14f)
-        setStroke(dp(ctx, if (active) 2 else 1), if (active) Color.WHITE else Color.argb(65, 255, 255, 255))
+        setStroke(dp(ctx, if (active) 2 else 1), if (active) Color.WHITE else LauncherUtils.withAlpha(accent, 95))
     }
 
-    // Animated tvOS-style segmented pill track with smooth sliding highlight
+    // Adaptive tvOS segmented track that automatically resizes thumb when panel width changes (20%-35%)
     fun addSegmentedTrack(
         ctx: Context,
         parent: LinearLayout,
@@ -64,20 +74,22 @@ object PanelUiKit {
             setPadding(dp(ctx, 3), dp(ctx, 3), dp(ctx, 3), dp(ctx, 3))
             clipChildren = false
             clipToPadding = false
-            background = GradientDrawable().apply {
-                setColor(Color.argb(42, 12, 18, 42))
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM,
+                intArrayOf(Color.argb(95, 10, 16, 38), Color.argb(65, 22, 34, 72))
+            ).apply {
                 cornerRadius = LauncherUtils.dpF(ctx, 14f)
-                setStroke(dp(ctx, 1), Color.argb(55, 255, 255, 255))
+                setStroke(dp(ctx, 1), LauncherUtils.withAlpha(lp.accentColor, 85))
             }
         }
 
         val activeThumb = View(ctx).apply {
             background = GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(LauncherUtils.withAlpha(lp.accentColor, 195), LauncherUtils.withAlpha(lp.accentColor, 125))
+                intArrayOf(LauncherUtils.withAlpha(lp.accentColor, 225), LauncherUtils.withAlpha(lp.accentColor, 145))
             ).apply {
                 cornerRadius = LauncherUtils.dpF(ctx, 11f)
-                setStroke(dp(ctx, 1), Color.argb(180, 255, 255, 255))
+                setStroke(dp(ctx, 1), Color.WHITE)
             }
         }
         track.addView(activeThumb, FrameLayout.LayoutParams(0, dp(ctx, 30)))
@@ -113,11 +125,12 @@ object PanelUiKit {
                 }
                 setOnClickListener {
                     onSelect(key)
-                    val idx = itemViews.indexOfFirst { it.first == key }.coerceAtLeast(0)
-                    val targetView = itemViews[idx].second
+                    val targetView = itemViews.find { it.first == key }?.second ?: return@setOnClickListener
+                    activeThumb.layoutParams.width = targetView.width
+                    activeThumb.requestLayout()
                     activeThumb.animate()
                         .x(targetView.x)
-                        .setDuration(260L)
+                        .setDuration(240L)
                         .setInterpolator(LauncherUtils.FLUID_SPRING)
                         .start()
                 }
@@ -127,11 +140,13 @@ object PanelUiKit {
         }
 
         track.addView(row, FrameLayout.LayoutParams(-1, -2))
-        track.post {
-            val selIdx = itemViews.indexOfFirst { it.first == getSelected() }.coerceAtLeast(0)
-            val target = itemViews.getOrNull(selIdx)?.second ?: return@post
-            activeThumb.layoutParams.width = target.width
-            activeThumb.requestLayout()
+        // Dynamically recalculate thumb width & position whenever panel width changes
+        track.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            val target = itemViews.find { it.first == getSelected() }?.second ?: itemViews.firstOrNull()?.second ?: return@addOnLayoutChangeListener
+            if (target.width > 0 && activeThumb.layoutParams.width != target.width) {
+                activeThumb.layoutParams.width = target.width
+                activeThumb.requestLayout()
+            }
             activeThumb.x = target.x
         }
         parent.addView(track, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 5) })
