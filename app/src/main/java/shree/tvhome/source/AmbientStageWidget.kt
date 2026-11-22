@@ -137,7 +137,7 @@ class AmbientStageWidget(
         val wTop = LinearLayout(ctx).apply { orientation = HORIZONTAL; gravity = Gravity.CENTER }
         weatherIconTv.apply { text = cachedVisual.first; textSize = 28f; setPadding(0, 0, dp(8), 0) }
         tempTv.apply {
-            text = lp.prefs.getString("cached_temp", "28°C") ?: "28°C"
+            text = lp.prefs.getString(LauncherPreferences.PREF_CACHED_TEMP, "28°C") ?: "28°C"
             textSize = 23f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.WHITE)
@@ -147,7 +147,7 @@ class AmbientStageWidget(
         weatherCard.addView(wTop)
 
         condTv.apply {
-            text = lp.prefs.getString("cached_cond", cachedVisual.second) ?: cachedVisual.second
+            text = lp.prefs.getString(LauncherPreferences.PREF_CACHED_COND, cachedVisual.second) ?: cachedVisual.second
             textSize = 11f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(Color.rgb(145, 225, 255))
@@ -156,7 +156,7 @@ class AmbientStageWidget(
         }
         weatherCard.addView(condTv)
 
-        val savedCity = lp.prefs.getString("cached_city", lp.weatherCity.ifBlank { "Tap to Select City" })
+        val savedCity = lp.prefs.getString(LauncherPreferences.PREF_CACHED_CITY, lp.weatherCity.ifBlank { "Tap to Select City" })
         cityTv.apply {
             text = "📍 $savedCity  ▾"
             textSize = 10.5f
@@ -282,10 +282,11 @@ class AmbientStageWidget(
                                         setOnClickListener {
                                             lp.weatherCity = item.name
                                             lp.prefs.edit()
-                                                .putString("cached_city", item.name)
-                                                .putFloat("saved_lat", item.lat.toFloat())
-                                                .putFloat("saved_lon", item.lon.toFloat())
+                                                .putString(LauncherPreferences.PREF_CACHED_CITY, item.name)
+                                                .putFloat(LauncherPreferences.PREF_SAVED_LAT, item.lat.toFloat())
+                                                .putFloat(LauncherPreferences.PREF_SAVED_LON, item.lon.toFloat())
                                                 .apply()
+
                                             cityTv.text = "📍 ${item.name}  ▾"
                                             dialog.dismiss()
                                             triggerWeatherRefresh(true)
@@ -403,8 +404,8 @@ class AmbientStageWidget(
 
         thread {
             try {
-                var lat = lp.prefs.getFloat("saved_lat", 0f).toDouble()
-                var lon = lp.prefs.getFloat("saved_lon", 0f).toDouble()
+                var lat = lp.prefs.getFloat(LauncherPreferences.PREF_SAVED_LAT, 0f).toDouble()
+                var lon = lp.prefs.getFloat(LauncherPreferences.PREF_SAVED_LON, 0f).toDouble()
                 var cityName = lp.weatherCity.trim()
 
                 if (cityName.isNotEmpty() && (lat == 0.0 || lon == 0.0)) {
@@ -414,8 +415,8 @@ class AmbientStageWidget(
                         lon = found.lon
                         cityName = found.name
                         lp.prefs.edit()
-                            .putFloat("saved_lat", lat.toFloat())
-                            .putFloat("saved_lon", lon.toFloat())
+                            .putFloat(LauncherPreferences.PREF_SAVED_LAT, lat.toFloat())
+                            .putFloat(LauncherPreferences.PREF_SAVED_LON, lon.toFloat())
                             .apply()
                     }
                 }
@@ -431,9 +432,21 @@ class AmbientStageWidget(
                     } catch (_: Exception) {}
                 }
 
+                // Dynamically resolve region coordinates from device TimeZone/Locale instead of hardcoded lat/lon
                 if (lat == 0.0 && lon == 0.0) {
-                    lat = 17.6868; lon = 83.2185
-                    if (cityName.isEmpty()) cityName = "Local"
+                    val tzCity = java.util.TimeZone.getDefault().id
+                        .substringAfterLast('/')
+                        .replace('_', ' ')
+                        .takeIf { it.isNotBlank() && it != "GMT" && it != "UTC" }
+                    val fallbackQuery = tzCity ?: Locale.getDefault().displayCountry
+                    if (fallbackQuery.isNotBlank()) {
+                        val resolved = fetchCitySuggestions(fallbackQuery).firstOrNull()
+                        if (resolved != null) {
+                            lat = resolved.lat
+                            lon = resolved.lon
+                            if (cityName.isEmpty()) cityName = resolved.name
+                        }
+                    }
                 }
 
                 val wUrl = "https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&current=temperature_2m,weather_code"
@@ -444,10 +457,10 @@ class AmbientStageWidget(
                 val (emoji, desc) = decodeWeatherCode(code)
 
                 lp.prefs.edit()
-                    .putString("cached_temp", temp)
-                    .putString("cached_cond", desc)
-                    .putString("cached_city", cityName)
-                    .putInt("cached_weather_code", code)
+                    .putString(LauncherPreferences.PREF_CACHED_TEMP, temp)
+                    .putString(LauncherPreferences.PREF_CACHED_COND, desc)
+                    .putString(LauncherPreferences.PREF_CACHED_CITY, cityName)
+                    .putInt(LauncherPreferences.PREF_CACHED_WEATHER_CODE, code)
                     .apply()
 
                 uiHandler.post {

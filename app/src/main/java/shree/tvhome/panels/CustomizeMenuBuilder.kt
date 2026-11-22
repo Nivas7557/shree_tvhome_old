@@ -136,7 +136,7 @@ object CustomizeMenuBuilder {
                     isClickable = true
                     background = chipBg(ctx, lp.accentColor, isSel)
                     setOnFocusChangeListener { v, f ->
-                        MotionEngine.animateFocus(v, f, lp.motionStyle, 1.05f, 4f)
+                        MotionEngine.animateFocus(v, f, lp.motionStyle, 1.02f, 2f)
                         v.background = chipBg(ctx, lp.accentColor, f || lp.motionStyle == spec.key)
                     }
                     setOnClickListener {
@@ -144,7 +144,8 @@ object CustomizeMenuBuilder {
                         allMotionButtons.forEach { (k, b) ->
                             b.background = chipBg(ctx, lp.accentColor, b.hasFocus() || k == lp.motionStyle)
                         }
-                        MotionEngine.playDemoPreview(panel, spec.key)
+                        val hostPanel = (panel.parent?.parent as? View) ?: panel
+                        MotionEngine.playDemoPreview(hostPanel, spec.key)
                     }
                 }
                 allMotionButtons.add(spec.key to btn)

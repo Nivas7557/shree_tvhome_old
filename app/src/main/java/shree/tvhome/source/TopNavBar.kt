@@ -102,8 +102,11 @@ class TopNavBar(
         clipToPadding = false
         setPadding(0, 0, 0, 0)
 
-        val barHeight = dp(38)
-        val avatarSize = dp(88)
+        // Derive bar height and avatar size dynamically from screen height
+        val screenH = context.resources.displayMetrics.heightPixels
+        val barHeight = maxOf(dp(36), (screenH * 0.052f).toInt())
+        val avatarSize = (barHeight * 2.25f).toInt()
+
 
         val rightControls = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -147,13 +150,17 @@ class TopNavBar(
             clipToPadding = false
         }
 
+        val avatarRadius = avatarSize / 2f
+        val seamGap = LauncherUtils.dpF(context, 4f)
+
         greetingCard = GreetingShineCard(context, lp.userName, lp.greetingPhrase, lp.accentColor).apply {
-            setPadding(avatarSize - dp(6), dp(7), dp(16), dp(7))
+            // Start inner content padding dynamically after the avatar's outer circumference + gap
+            setPadding((avatarRadius + seamGap + dp(10)).toInt(), dp(7), dp(16), dp(7))
         }
         profileHeroGroup.addView(
             greetingCard,
             FrameLayout.LayoutParams(-2, dp(40), Gravity.START or Gravity.CENTER_VERTICAL).apply {
-                leftMargin = dp(20)
+                leftMargin = avatarRadius.toInt()
             }
         )
 
@@ -194,6 +201,14 @@ class TopNavBar(
             avatarFrame,
             FrameLayout.LayoutParams(avatarSize, avatarSize, Gravity.START or Gravity.CENTER_VERTICAL)
         )
+
+        // Compute exact avatar center relative to greetingCard after layout so the cutout matches dynamically
+        profileHeroGroup.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            val relCenterX = (avatarFrame.left + avatarFrame.width / 2f) - greetingCard.left
+            val relCenterY = (avatarFrame.top + avatarFrame.height / 2f) - greetingCard.top
+            val cutoutR = (avatarFrame.width / 2f) + seamGap
+            greetingCard.setAvatarCutout(relCenterX, relCenterY, cutoutR)
+        }
 
         nudgeOverlayBubble = TextView(context).apply {
             textSize = 10.5f
@@ -299,7 +314,7 @@ class TopNavBar(
         val initial = cleanName.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "S"
         avatarInitialTv.text = initial
 
-        val picUriStr = lp.prefs.getString("profile_pic_uri", null)
+        val picUriStr = lp.profilePicUri
         if (!picUriStr.isNullOrEmpty()) {
             try {
                 val uri = Uri.parse(picUriStr)
@@ -308,12 +323,12 @@ class TopNavBar(
                     BitmapFactory.decodeStream(it, null, opts)
                 }
                 if (rawBmp != null) {
-                    val zoom = lp.prefs.getFloat("profile_pic_zoom", 1.0f)
                     avatarImageView.setImageBitmap(makeCircularBitmap(rawBmp))
-                    avatarImageView.scaleX = zoom
-                    avatarImageView.scaleY = zoom
+                    avatarImageView.scaleX = 1.0f
+                    avatarImageView.scaleY = 1.0f
                     avatarImageView.visibility = View.VISIBLE
                     avatarInitialTv.visibility = View.GONE
+
                     return
                 }
             } catch (_: Exception) {}
@@ -333,9 +348,9 @@ class TopNavBar(
         val clipPath = Path().apply { addCircle(cx, cy, r, Path.Direction.CW) }
         canvas.clipPath(clipPath)
 
-        val zoom = lp.prefs.getFloat("profile_pic_zoom", 1.0f)
-        val panX = lp.prefs.getFloat("profile_pic_pan_x", 0f)
-        val panY = lp.prefs.getFloat("profile_pic_pan_y", 0f)
+        val zoom = lp.profilePicZoom
+        val panX = lp.profilePicPanX
+        val panY = lp.profilePicPanY
 
         val baseScale = maxOf(outSize.toFloat() / src.width, outSize.toFloat() / src.height)
         val finalScale = baseScale * zoom

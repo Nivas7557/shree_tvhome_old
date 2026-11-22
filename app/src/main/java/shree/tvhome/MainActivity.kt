@@ -2,11 +2,13 @@ package shree.tvhome
 
 import android.animation.LayoutTransition
 import android.animation.ValueAnimator
+import android.Manifest
 import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Typeface
@@ -85,6 +87,13 @@ class MainActivity : Activity() {
         )
 
         buildScreen()
+        if (lp.pictureMode == "Custom") {
+            shree.tvhome.panels.SystemSubPanels.applyWarmTintOverlay(this, lp.customWarmthPct)
+        } else {
+            val preset = shree.tvhome.panels.SystemSubPanels.PICTURE_MODES.find { it.key == lp.pictureMode }
+            if (preset != null) shree.tvhome.panels.SystemSubPanels.applyWarmTintOverlay(this, preset.warmth)
+        }
+        
         NightNudgeReceiver.scheduleNextNudge(this)
 
         val filter = IntentFilter().apply {
@@ -129,7 +138,14 @@ class MainActivity : Activity() {
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (::sideDrawer.isInitialized && sideDrawer.isOpen &&
-            FocusTrap.handleKeyEvent(event, true, drawerLayout, topNavBar, sideDrawer.getParentNavTag())
+            FocusTrap.handleKeyEvent(
+                event = event,
+                isDrawerOpen = true,
+                drawerLayout = drawerLayout,
+                topNavBar = topNavBar,
+                activeParentTag = sideDrawer.getParentNavTag(),
+                activePanel = sideDrawer.getActivePanelView()
+            )
         ) {
             return true
         }
@@ -145,17 +161,49 @@ class MainActivity : Activity() {
         try { contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION) } catch (_: Exception) {}
 
         if (req == REQ_PICK_WALLPAPER) {
-            lp.prefs.edit().putString(LauncherPreferences.PREF_WALLPAPER, uri.toString()).putString("wp_scale_mode", "fit")
-                .putFloat("wp_zoom", 1.08f).putInt("wp_offset_x", 0).putInt("wp_offset_y", 0).apply()
+            lp.prefs.edit()
+                .putString(LauncherPreferences.PREF_WALLPAPER, uri.toString())
+                .putString(LauncherPreferences.PREF_WP_SCALE_MODE, "fit")
+                .putFloat(LauncherPreferences.PREF_WP_ZOOM, 1.08f)
+                .putInt(LauncherPreferences.PREF_WP_OFFSET_X, 0)
+                .putInt(LauncherPreferences.PREF_WP_OFFSET_Y, 0)
+                .apply()
             applyWallpaperOnly()
             sideDrawer.open(SideControlDrawer.MODE_WALLPAPER_EDIT)
         } else if (req == REQ_PICK_PROFILE_PIC) {
-            lp.prefs.edit().putString("profile_pic_uri", uri.toString()).apply()
+            lp.profilePicUri = uri.toString()
             topNavBar.refreshProfileAvatar()
             Toast.makeText(this, "Profile avatar updated!", Toast.LENGTH_SHORT).show()
         }
     }
 
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        val granted = grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
+        when (requestCode) {
+            shree.tvhome.panels.WifiPanelBuilder.REQ_WIFI_LOCATION -> {
+                if (granted) {
+                    Toast.makeText(this, "Location granted • Scanning Wi-Fi...", Toast.LENGTH_SHORT).show()
+                    if (::sideDrawer.isInitialized && sideDrawer.isOpen) {
+                        sideDrawer.open(SideControlDrawer.MODE_WIFI)
+                    }
+                } else {
+                    Toast.makeText(this, "Location permission needed to view Wi-Fi networks", Toast.LENGTH_SHORT).show()
+                }
+            }
+            shree.tvhome.panels.SystemSubPanels.REQ_BLUETOOTH_CONNECT -> {
+                if (granted) {
+                    Toast.makeText(this, "Bluetooth access granted", Toast.LENGTH_SHORT).show()
+                    if (::sideDrawer.isInitialized && sideDrawer.isOpen) {
+                        sideDrawer.open(SideControlDrawer.MODE_SUB_BLUETOOTH)
+                    }
+                } else {
+                    Toast.makeText(this, "Bluetooth permission denied", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+    
     private fun openImagePicker(requestCode: Int) {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE); type = "image/*"
@@ -291,9 +339,20 @@ class MainActivity : Activity() {
 
         setupRightDrawer(contentArea)
         val nudgeView = topNavBar.createFloatingNudgeView()
-        rootLayout.addView(nudgeView, FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.START).apply { topMargin = dp(52); leftMargin = dp(235) })
+        val nudgeParams = FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.START).apply {
+            topMargin = dp(52)
+        }
+        rootLayout.addView(nudgeView, nudgeParams)
+        
+        // Position nudge bubble dynamically after TopNavBar measures its profile card width
+        topNavBar.post {
+            val profileGroup = topNavBar.getChildAt(1)
+            nudgeParams.leftMargin = (profileGroup?.right ?: dp(180)) + dp(12)
+            nudgeView.requestLayout()
+        }
         setContentView(rootLayout)
-        syncAppGrid(allowFocusRestore = false)
+        // Request focus on the first app tile when launcher starts fresh
+        syncAppGrid(allowFocusRestore = true)
     }
 
     private fun openHiddenRibbon() {

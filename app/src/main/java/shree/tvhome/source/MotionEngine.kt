@@ -153,6 +153,7 @@ object MotionEngine {
         resetTransform(panel)
         ensureCameraDistance(panel)
         val spec = getSpec(style)
+        panel.translationZ = 0f
         val w = maxOf(panel.width, LauncherUtils.dp(panel.context, TileThemePalette.PANEL_MIN_WIDTH_DP + 30)).toFloat()
         val h = maxOf(panel.height, LauncherUtils.dp(panel.context, 420)).toFloat()
         val d = panel.resources.displayMetrics.density

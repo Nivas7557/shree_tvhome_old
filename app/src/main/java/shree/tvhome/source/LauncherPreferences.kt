@@ -22,6 +22,37 @@ class LauncherPreferences(context: Context) {
         const val PREF_USER_NAME = "launcher_user_name"
         const val PREF_GREETING_PHRASE = "launcher_greeting_phrase"
         const val PREF_SORT_ASC = "sort_ascending"
+        const val PREF_SORT_ORDER = "sort_order"
+        const val PREF_LIVE_WP_MODE = "live_wp_mode"
+        const val PREF_PHOTO_WEATHER_AURA = "photo_weather_aura"
+        const val PREF_CACHED_WEATHER_CODE = "cached_weather_code"
+        const val PREF_MOTION_STYLE = "motion_style"
+        const val PREF_WEATHER_CITY = "weather_city"
+
+        // Profile Pic Keys
+        const val PREF_PROFILE_PIC_URI = "profile_pic_uri"
+        const val PREF_PROFILE_PIC_ZOOM = "profile_pic_zoom"
+        const val PREF_PROFILE_PIC_PAN_X = "profile_pic_pan_x"
+        const val PREF_PROFILE_PIC_PAN_Y = "profile_pic_pan_y"
+
+        // Wallpaper Transform Keys
+        const val PREF_WP_SCALE_MODE = "wp_scale_mode"
+        const val PREF_WP_ZOOM = "wp_zoom"
+        const val PREF_WP_OFFSET_X = "wp_offset_x"
+        const val PREF_WP_OFFSET_Y = "wp_offset_y"
+
+        // Weather Cache Keys
+        const val PREF_CACHED_TEMP = "cached_temp"
+        const val PREF_CACHED_COND = "cached_cond"
+        const val PREF_CACHED_CITY = "cached_city"
+        const val PREF_SAVED_LAT = "saved_lat"
+        const val PREF_SAVED_LON = "saved_lon"
+
+        // Display & Picture Mode Keys
+        const val PREF_PICTURE_MODE = "picture_mode"
+        const val PREF_CUSTOM_BRIGHTNESS = "custom_brightness_pct"
+        const val PREF_CUSTOM_WARMTH = "custom_warmth_pct"
+        
     }
 
     val prefs: SharedPreferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -67,45 +98,101 @@ class LauncherPreferences(context: Context) {
             value.coerceIn(TileThemePalette.PANEL_WIDTH_OPTIONS.first(), TileThemePalette.PANEL_WIDTH_OPTIONS.last())
         ).apply()
 
-    var userName: String
-        get() = prefs.getString(PREF_USER_NAME, "Shree") ?: "Shree"
-        set(value) = prefs.edit().putString(PREF_USER_NAME, value.ifBlank { "Shree" }).apply()
+    // Dynamically resolve actual user-configured TV Device Name from Android Settings
+    private val defaultDeviceOwner: String by lazy {
+        val resolver = context.contentResolver
+        val globalName = try {
+            android.provider.Settings.Global.getString(resolver, android.provider.Settings.Global.DEVICE_NAME)
+        } catch (_: Exception) { null }
 
+        val btName = try {
+            android.provider.Settings.Secure.getString(resolver, "bluetooth_name")
+        } catch (_: Exception) { null }
+
+        val manufacturer = android.os.Build.MANUFACTURER
+            ?.replaceFirstChar { it.uppercase() }
+            ?.takeIf { it.isNotBlank() }
+
+        listOf(globalName, btName, manufacturer, "TV")
+            .firstOrNull { !it.isNullOrBlank() && !it.equals("unknown", ignoreCase = true) }
+            ?.trim() ?: "TV"
+    }
+
+    var userName: String
+        get() = prefs.getString(PREF_USER_NAME, defaultDeviceOwner) ?: defaultDeviceOwner
+        set(value) = prefs.edit().putString(PREF_USER_NAME, value.ifBlank { defaultDeviceOwner }).apply()
+        
     var greetingPhrase: String
         get() = prefs.getString(PREF_GREETING_PHRASE, "") ?: ""
         set(value) = prefs.edit().putString(PREF_GREETING_PHRASE, value).apply()
 
-    var isSortAscending: Boolean
-        get() = prefs.getBoolean(PREF_SORT_ASC, true)
-        set(value) = prefs.edit().putBoolean(PREF_SORT_ASC, value).apply()
-
     var sortOrder: String
-        get() = prefs.getString("sort_order", "az") ?: "az"
-        set(value) = prefs.edit().putString("sort_order", value).apply()
+        get() = prefs.getString(PREF_SORT_ORDER, "az") ?: "az"
+        set(value) = prefs.edit().putString(PREF_SORT_ORDER, value).apply()
 
     var liveWallpaperMode: String
-        get() = prefs.getString("live_wp_mode", LauncherBackground.MODE_SMART) ?: LauncherBackground.MODE_SMART
-        set(value) = prefs.edit().putString("live_wp_mode", value).apply()
+        get() = prefs.getString(PREF_LIVE_WP_MODE, LauncherBackground.MODE_SMART) ?: LauncherBackground.MODE_SMART
+        set(value) = prefs.edit().putString(PREF_LIVE_WP_MODE, value).apply()
 
     var photoWeatherAura: Boolean
-        get() = prefs.getBoolean("photo_weather_aura", true)
-        set(value) = prefs.edit().putBoolean("photo_weather_aura", value).apply()
+        get() = prefs.getBoolean(PREF_PHOTO_WEATHER_AURA, true)
+        set(value) = prefs.edit().putBoolean(PREF_PHOTO_WEATHER_AURA, value).apply()
 
     var cachedWeatherCode: Int
-        get() = prefs.getInt("cached_weather_code", 0)
-        set(value) = prefs.edit().putInt("cached_weather_code", value).apply()
+        get() = prefs.getInt(PREF_CACHED_WEATHER_CODE, 0)
+        set(value) = prefs.edit().putInt(PREF_CACHED_WEATHER_CODE, value).apply()
 
     var motionStyle: String
-        get() = prefs.getString("motion_style", MotionEngine.STYLES.first().key) ?: MotionEngine.STYLES.first().key
-        set(value) = prefs.edit().putString("motion_style", value).apply()
+        get() = prefs.getString(PREF_MOTION_STYLE, MotionEngine.STYLES.first().key) ?: MotionEngine.STYLES.first().key
+        set(value) = prefs.edit().putString(PREF_MOTION_STYLE, value).apply()
 
     var weatherCity: String
-        get() = prefs.getString("weather_city", "") ?: ""
-        set(value) = prefs.edit().putString("weather_city", value).apply()
+        get() = prefs.getString(PREF_WEATHER_CITY, "") ?: ""
+        set(value) = prefs.edit().putString(PREF_WEATHER_CITY, value).apply()
 
-    var userEmail: String
-        get() = prefs.getString("user_email", "") ?: ""
-        set(value) = prefs.edit().putString("user_email", value).apply()
+    var profilePicUri: String?
+        get() = prefs.getString(PREF_PROFILE_PIC_URI, null)
+        set(value) = prefs.edit().putString(PREF_PROFILE_PIC_URI, value).apply()
+
+    var profilePicZoom: Float
+        get() = prefs.getFloat(PREF_PROFILE_PIC_ZOOM, 1.0f)
+        set(value) = prefs.edit().putFloat(PREF_PROFILE_PIC_ZOOM, value).apply()
+
+    var profilePicPanX: Float
+        get() = prefs.getFloat(PREF_PROFILE_PIC_PAN_X, 0f)
+        set(value) = prefs.edit().putFloat(PREF_PROFILE_PIC_PAN_X, value).apply()
+
+    var profilePicPanY: Float
+        get() = prefs.getFloat(PREF_PROFILE_PIC_PAN_Y, 0f)
+        set(value) = prefs.edit().putFloat(PREF_PROFILE_PIC_PAN_Y, value).apply()
+
+    var wpScaleMode: String
+        get() = prefs.getString(PREF_WP_SCALE_MODE, "fit") ?: "fit"
+        set(value) = prefs.edit().putString(PREF_WP_SCALE_MODE, value).apply()
+
+    var wpZoom: Float
+        get() = prefs.getFloat(PREF_WP_ZOOM, 1.0f)
+        set(value) = prefs.edit().putFloat(PREF_WP_ZOOM, value).apply()
+
+    var wpOffsetX: Int
+        get() = prefs.getInt(PREF_WP_OFFSET_X, 0)
+        set(value) = prefs.edit().putInt(PREF_WP_OFFSET_X, value).apply()
+
+    var wpOffsetY: Int
+        get() = prefs.getInt(PREF_WP_OFFSET_Y, 0)
+        set(value) = prefs.edit().putInt(PREF_WP_OFFSET_Y, value).apply()
+
+    var pictureMode: String
+        get() = prefs.getString(PREF_PICTURE_MODE, "Standard") ?: "Standard"
+        set(value) = prefs.edit().putString(PREF_PICTURE_MODE, value).apply()
+
+    var customBrightnessPct: Int
+        get() = prefs.getInt(PREF_CUSTOM_BRIGHTNESS, 80).coerceIn(10, 100)
+        set(value) = prefs.edit().putInt(PREF_CUSTOM_BRIGHTNESS, value.coerceIn(10, 100)).apply()
+
+    var customWarmthPct: Int
+        get() = prefs.getInt(PREF_CUSTOM_WARMTH, 0).coerceIn(0, 75)
+        set(value) = prefs.edit().putInt(PREF_CUSTOM_WARMTH, value.coerceIn(0, 75)).apply()
 
     fun getOrderedFavorites(): MutableList<String> {
         val raw = prefs.getString(PREF_FAVORITES_ORDER, null)
