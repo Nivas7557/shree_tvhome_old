@@ -347,4 +347,3 @@ object AppTileFactory {
         dp(ctx, TileThemePalette.getTileSizeSpec(tileSize).badgeDp)
 
     private fun dp(ctx: Context, v: Int) = LauncherUtils.dp(ctx, v)
-}
