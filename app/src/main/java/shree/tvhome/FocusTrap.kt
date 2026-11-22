@@ -26,10 +26,10 @@ object FocusTrap {
     }
 
     fun focusFirstInPanel(panel: ViewGroup?, fallbackContainer: ViewGroup? = null): Boolean {
-        if (panel != null && panel.findFocus() != null) return true
         val target = (panel?.let { findFirstFocusable(it) })
             ?: (fallbackContainer?.let { findFirstFocusable(it) })
             ?: return false
+        // Explicitly force focus onto the first focusable child without skipping to lower rows
         target.post {
             if (target.isAttachedToWindow && target.visibility == View.VISIBLE) {
                 target.requestFocus()
