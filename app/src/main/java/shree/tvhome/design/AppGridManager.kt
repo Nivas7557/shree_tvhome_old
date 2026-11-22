@@ -96,9 +96,12 @@ object AppGridManager {
         hiddenCount.text = "${hiddenApps.size} Hidden • Select for Options"
 
         val sizeSpec = TileThemePalette.getTileSizeSpec(lp.tileSize)
+        
+        // Scale side padding and grid gaps proportionally to screen width
         val screenW = ctx.resources.displayMetrics.widthPixels
-        val sidePad = dp(ctx, 48)
-        val gap = dp(ctx, 12)
+        val sidePad = (screenW * 0.035f).toInt()
+        val gap = maxOf(dp(ctx, 8), (screenW * 0.009f).toInt())
+
         val minStageW = dp(ctx, TileThemePalette.PANEL_MIN_WIDTH_DP)
         val rightStageW = maxOf(minStageW, (screenW * (lp.panelWidthPct / 100f)).toInt())
         val baseAvailableW = maxOf(dp(ctx, 200), screenW - sidePad - rightStageW - dp(ctx, 6))
@@ -176,9 +179,12 @@ object AppGridManager {
         }
 
         val sizeSpec = TileThemePalette.getTileSizeSpec(lp.tileSize)
+        
+        // Scale grid padding and spacing dynamically based on display resolution
         val screenW = ctx.resources.displayMetrics.widthPixels
-        val sidePad = dp(ctx, 48)
-        val gap = dp(ctx, 12)
+        val sidePad = (screenW * 0.035f).toInt()
+        val gap = maxOf(dp(ctx, 8), (screenW * 0.009f).toInt())
+
         val minStageW = dp(ctx, TileThemePalette.PANEL_MIN_WIDTH_DP)
         val rightStageW = maxOf(minStageW, (screenW * (lp.panelWidthPct / 100f)).toInt())
         val currentAvailableW = maxOf(dp(ctx, 200), screenW - sidePad - rightStageW - dp(ctx, 6))
