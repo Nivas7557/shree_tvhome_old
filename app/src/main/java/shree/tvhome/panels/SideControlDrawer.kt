@@ -108,6 +108,21 @@ class SideControlDrawer(
     private var activePanel: LinearLayout? = null
     private var stageWidget: View? = null
 
+    init {
+        // Repaint drawer shell naturally whenever Accent or Glass Palette changes
+        lp.addStyleListener {
+            if (isOpen) {
+                drawerLayout.background = GradientDrawable(
+                    GradientDrawable.Orientation.TL_BR,
+                    TileThemePalette.getGlassPanelColors(lp.tileColor, lp.accentColor, elevated = true)
+                ).apply {
+                    cornerRadius = LauncherUtils.dpF(context, 24f)
+                    setStroke(dp(1.5f), LauncherUtils.withAlpha(lp.accentColor, 185))
+                }
+            }
+        }
+    }
+
     fun attachStageWidget(widget: View) {
         stageWidget = widget
     }
