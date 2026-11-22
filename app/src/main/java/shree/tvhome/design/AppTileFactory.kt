@@ -236,17 +236,19 @@ object AppTileFactory {
                     interpolator = AccelerateDecelerateInterpolator()
                     addUpdateListener { anim ->
                         val f = anim.animatedValue as Float
-                        val pulseScale = 1.10f + (0.04f * f)
-                        unitContainer.scaleX = pulseScale
-                        unitContainer.scaleY = pulseScale
+                        // Breathe only the icon card; keep the app nameplate steady and crisp
+                        val iconPulse = 1.0f + (0.045f * f)
+                        innerCard.scaleX = iconPulse
+                        innerCard.scaleY = iconPulse
                         innerCard.updateGlowPulse(f)
                     }
                     start()
                 }
-            } else {
+        } else {
                 tv.isSelected = false
                 breathingAnim?.cancel()
                 breathingAnim = null
+                innerCard.animate().scaleX(1f).scaleY(1f).setDuration(220L).start()
             }
         }
 
