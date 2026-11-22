@@ -351,7 +351,8 @@ class MainActivity : Activity() {
             nudgeView.requestLayout()
         }
         setContentView(rootLayout)
-        syncAppGrid(allowFocusRestore = false)
+        // Request focus on the first app tile when launcher starts fresh
+        syncAppGrid(allowFocusRestore = true)
     }
 
     private fun openHiddenRibbon() {
