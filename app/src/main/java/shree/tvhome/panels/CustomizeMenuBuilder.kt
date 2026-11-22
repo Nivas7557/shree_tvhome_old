@@ -304,7 +304,7 @@ object CustomizeMenuBuilder {
                         text = theme.name.substringBefore(" ")
                         textSize = 9.5f
                         typeface = Typeface.DEFAULT_BOLD
-                        setTextColor(Color.WHITE)
+                        setTextColor(TileThemePalette.getPrimaryTextColor(lp.tileColor))
                         isSingleLine = true
                     })
                 }
@@ -397,26 +397,43 @@ object CustomizeMenuBuilder {
             setPadding(dp(ctx, 10), dp(ctx, 6), dp(ctx, 10), dp(ctx, 6))
             isFocusable = true
             isClickable = true
-            background = PanelUiKit.glassCardBg(ctx, lp.accentColor, false)
-            setOnFocusChangeListener { v, f ->
-                MotionEngine.animateFocus(v, f, lp.motionStyle, 1.03f, 4f)
-                v.background = PanelUiKit.glassCardBg(ctx, lp.accentColor, f)
-            }
-            setOnClickListener { onClick() }
-            addView(TextView(ctx).apply {
+
+            val titleTv = TextView(ctx).apply {
                 text = "$icon$title"
                 textSize = 10f
                 typeface = Typeface.DEFAULT_BOLD
-                setTextColor(Color.WHITE)
                 isSingleLine = true
-            })
-            addView(TextView(ctx).apply {
+            }
+            val subTv = TextView(ctx).apply {
                 text = sub
                 textSize = 8.2f
-                setTextColor(lp.accentColor)
                 isSingleLine = true
-            })
+            }
+
+            val syncColors = {
+                background = PanelUiKit.glassCardBg(ctx, lp.accentColor, hasFocus(), lp.tileColor)
+                titleTv.setTextColor(TileThemePalette.getPrimaryTextColor(lp.tileColor))
+                val surfaceColors = TileThemePalette.getTheme(lp.tileColor).normalColors
+                subTv.setTextColor(
+                    if (TileThemePalette.isLightSurface(surfaceColors)) {
+                        TileThemePalette.getAdaptiveTextColor(surfaceColors, secondary = true)
+                    } else {
+                        lp.accentColor
+                    }
+                )
+            }
+            syncColors()
+            lp.addStyleListener(syncColors)
+
+            setOnFocusChangeListener { v, f ->
+                MotionEngine.animateFocus(v, f, lp.motionStyle, 1.03f, 4f)
+                syncColors()
+            }
+            setOnClickListener { onClick() }
+            addView(titleTv)
+            addView(subTv)
         }
+        
     private fun swatchBg(ctx: Context, col: Int, active: Boolean) = GradientDrawable().apply {
         shape = GradientDrawable.OVAL
         setColor(col)
