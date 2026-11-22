@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://android.com"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Deep Emerald to Royal Sapphire Diagonal Jewel Gradient -->
+    <path android:pathData="M0,0 H108 V108 H0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="12"
+                android:startY="12"
+                android:endX="96"
+                android:endY="96">
+                <item android:offset="0.0" android:color="#FF0E8A6D" />
+                <item android:offset="0.5" android:color="#FF0B5D69" />
+                <item android:offset="1.0" android:color="#FF0A3B66" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Top Specular 3D Glass Dome Sheen -->
+    <path android:pathData="M0,0 H108 V54 Q54,66 0,54 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="54"
+                android:startY="0"
+                android:endX="54"
+                android:endY="58">
+                <item android:offset="0.0" android:color="#55FFFFFF" />
+                <item android:offset="1.0" android:color="#00FFFFFF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Subtle Golden Starlight Sparkles -->
+    <path android:fillColor="#88FFE89E" android:pathData="M24,26 m-1.1,0 a1.1,1.1 0 1,0 2.2,0 a1.1,1.1 0 1,0 -2.2,0" />
+    <path android:fillColor="#66FFFFFF" android:pathData="M82,28 m-0.9,0 a0.9,0.9 0 1,0 1.8,0 a0.9,0.9 0 1,0 -1.8,0" />
+    <path android:fillColor="#77FFE89E" android:pathData="M26,78 m-1.0,0 a1.0,1.0 0 1,0 2.0,0 a1.0,1.0 0 1,0 -2.0,0" />
+    <path android:fillColor="#88FFFFFF" android:pathData="M80,76 m-1.1,0 a1.1,1.1 0 1,0 2.2,0 a1.1,1.1 0 1,0 -2.2,0" />
+</vector>

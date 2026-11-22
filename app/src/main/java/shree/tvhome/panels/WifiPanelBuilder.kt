@@ -116,6 +116,25 @@ object WifiPanelBuilder {
                 col2.addView(TextView(ctx).apply { text = "IP ADDRESS"; textSize = 8f; setTextColor(Color.LTGRAY) })
                 col2.addView(TextView(ctx).apply { text = ipStr; textSize = 11f; typeface = Typeface.DEFAULT_BOLD; setTextColor(Color.WHITE) })
                 metricCard.addView(col2, LinearLayout.LayoutParams(0, -2, 1f))
+
+                val col3 = LinearLayout(ctx).apply { orientation = LinearLayout.VERTICAL }
+                col3.addView(TextView(ctx).apply { text = "PING"; textSize = 8f; setTextColor(Color.LTGRAY) })
+                val pingTv = TextView(ctx).apply { text = "Checking..."; textSize = 11f; typeface = Typeface.DEFAULT_BOLD; setTextColor(Color.rgb(120, 245, 175)) }
+                col3.addView(pingTv)
+                metricCard.addView(col3, LinearLayout.LayoutParams(0, -2, 0.8f))
+
+                // Measure live network reachability latency asynchronously
+                kotlin.concurrent.thread {
+                    val start = System.currentTimeMillis()
+                    val reachable = try {
+                        java.net.InetAddress.getByName("8.8.8.8").isReachable(1500)
+                    } catch (_: Exception) { false }
+                    val ms = System.currentTimeMillis() - start
+                    pingTv.post {
+                        pingTv.text = if (reachable) "${ms}ms" else "Offline"
+                        pingTv.setTextColor(if (reachable) Color.rgb(120, 245, 175) else Color.rgb(255, 115, 130))
+                    }
+                }
                 dynamicListContainer.addView(metricCard, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 10) })
             }
 

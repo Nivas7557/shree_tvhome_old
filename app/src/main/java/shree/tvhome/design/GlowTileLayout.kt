@@ -2,17 +2,14 @@ package shree.tvhome.design
 
 import android.animation.ValueAnimator
 import android.content.Context
-import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.LinearGradient
-import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
-import android.graphics.SweepGradient
 import android.view.animation.DecelerateInterpolator
 import android.widget.FrameLayout
 import shree.tvhome.source.LauncherUtils
@@ -21,16 +18,14 @@ import shree.tvhome.source.TileThemePalette
 class GlowTileLayout(context: Context) : FrameLayout(context) {
     private val outerCardPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val outerSheenPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val spotlightPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val radiantAuraPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
-    private val sweepBorderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
+    private val sunrayGlowPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val coreBloomPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val innerRimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
 
     private val rectF = RectF()
     private val sheenRect = RectF()
     private val outerPath = Path()
     private val innerIconPath = Path()
-    private val sweepMatrix = Matrix()
 
     private var tileFocused = false
     private var glowIntensity = 0f
@@ -45,8 +40,6 @@ class GlowTileLayout(context: Context) : FrameLayout(context) {
         clipChildren = false
         clipToPadding = false
         outlineProvider = null
-        // Required for smooth BlurMaskFilter ambient glow rendering
-        setLayerType(LAYER_TYPE_SOFTWARE, null)
     }
 
     fun setStyle(color: Int, shape: String?, themeKey: String?, dominantColor: Int = color) {
@@ -70,10 +63,9 @@ class GlowTileLayout(context: Context) : FrameLayout(context) {
             if (width > 0 && height > 0) updateShaders(width.toFloat(), height.toFloat())
             invalidate()
         } else {
-            // Smoothly fade out the radiant aura when focus moves away instead of snapping off abruptly
             val startGlow = glowIntensity.coerceAtLeast(0.45f)
             exitAnimator = ValueAnimator.ofFloat(startGlow, 0f).apply {
-                duration = 320L
+                duration = 340L
                 interpolator = DecelerateInterpolator(1.6f)
                 addUpdateListener { anim ->
                     glowIntensity = anim.animatedValue as Float
@@ -99,41 +91,31 @@ class GlowTileLayout(context: Context) : FrameLayout(context) {
 
     private fun updateShaders(w: Float, h: Float) {
         if (w <= 0f || h <= 0f) return
-        val minDim = minOf(w, h)
 
         val colors = TileThemePalette.getTopBottomColors(tileKey, tileFocused)
-        outerCardPaint.shader = LinearGradient(0f, 0f, 0f, h, colors, null, Shader.TileMode.CLAMP)
+        outerCardPaint.shader = LinearGradient(0f, 0f, w * 0.35f, h, colors, null, Shader.TileMode.CLAMP)
 
-        sheenRect.set(0f, 0f, w, h * 0.50f)
+        sheenRect.set(0f, 0f, w, h * 0.46f)
         outerSheenPaint.shader = LinearGradient(
-            0f, 0f, 0f, h * 0.50f,
-            Color.argb(if (tileFocused) 130 else 72, 255, 255, 255),
-            Color.argb(6, 255, 255, 255),
-            Shader.TileMode.CLAMP
-        )
-
-        // Dynamic soft Gaussian blur radius proportional to tile size
-        val blurRadius = (minDim * 0.18f).coerceAtLeast(6f)
-        radiantAuraPaint.maskFilter = BlurMaskFilter(blurRadius, BlurMaskFilter.Blur.NORMAL)
-        radiantAuraPaint.color = appDominantColor
-
-        spotlightPaint.shader = RadialGradient(
-            w / 2f, h * 0.45f, maxOf(w, h) * 0.72f,
-            LauncherUtils.withAlpha(appDominantColor, 155),
-            Color.TRANSPARENT,
-            Shader.TileMode.CLAMP
-        )
-
-        // Specular rotating rim shader for focused border
-        sweepBorderPaint.shader = SweepGradient(
-            w / 2f, h / 2f,
+            0f, 0f, 0f, h * 0.46f,
             intArrayOf(
-                LauncherUtils.withAlpha(appDominantColor, 90),
-                Color.argb(235, 255, 255, 255),
-                LauncherUtils.withAlpha(appDominantColor, 220),
-                LauncherUtils.withAlpha(appDominantColor, 90)
+                Color.argb(if (tileFocused) 175 else 115, 255, 255, 255),
+                Color.argb(if (tileFocused) 55 else 28, 255, 255, 255),
+                Color.TRANSPARENT
             ),
-            floatArrayOf(0f, 0.25f, 0.65f, 1f)
+            floatArrayOf(0f, 0.65f, 1f),
+            Shader.TileMode.CLAMP
+        )
+
+        coreBloomPaint.shader = RadialGradient(
+            w / 2f, h * 0.45f, maxOf(w, h) * 0.65f,
+            intArrayOf(
+                LauncherUtils.withAlpha(accentColor, 165),
+                LauncherUtils.withAlpha(appDominantColor, 60),
+                Color.TRANSPARENT
+            ),
+            floatArrayOf(0f, 0.55f, 1f),
+            Shader.TileMode.CLAMP
         )
     }
 
@@ -191,45 +173,46 @@ class GlowTileLayout(context: Context) : FrameLayout(context) {
         val h = height.toFloat()
         if (w <= 0f || h <= 0f) return
 
-        // 1. Natural soft radiant ambient glow behind the tile (active during focus & smooth exit)
+        val cx = w / 2f
+        val cy = h / 2f
+        val baseRadius = maxOf(w, h) * 0.56f
+
         if (tileFocused || glowIntensity > 0.01f) {
-            val activeStrength = if (tileFocused) (0.55f + 0.45f * glowIntensity) else glowIntensity
-            radiantAuraPaint.alpha = (185 * activeStrength).toInt().coerceIn(0, 220)
-            canvas.drawPath(outerPath, radiantAuraPaint)
+            val strength = if (tileFocused) (0.60f + 0.40f * glowIntensity) else glowIntensity
+            val sunrayRadius = baseRadius * (1.08f + 0.14f * glowIntensity)
+
+            sunrayGlowPaint.shader = RadialGradient(
+                cx, cy, sunrayRadius,
+                intArrayOf(
+                    LauncherUtils.withAlpha(accentColor, (225 * strength).toInt()),
+                    LauncherUtils.withAlpha(appDominantColor, (125 * strength).toInt()),
+                    LauncherUtils.withAlpha(accentColor, (32 * strength).toInt()),
+                    Color.TRANSPARENT
+                ),
+                floatArrayOf(0.25f, 0.56f, 0.82f, 1.0f),
+                Shader.TileMode.CLAMP
+            )
+            canvas.drawCircle(cx, cy, sunrayRadius, sunrayGlowPaint)
         }
 
-        // 2. Glass card base & top sheen
         canvas.drawPath(outerPath, outerCardPaint)
         canvas.save()
         canvas.clipPath(outerPath)
         canvas.drawRect(sheenRect, outerSheenPaint)
         if (tileFocused || glowIntensity > 0.01f) {
-            spotlightPaint.alpha = ((120 + 95 * glowIntensity) * if (tileFocused) 1f else glowIntensity).toInt()
-            canvas.drawRect(0f, 0f, w, h, spotlightPaint)
+            coreBloomPaint.alpha = (255 * if (tileFocused) (0.65f + 0.35f * glowIntensity) else glowIntensity).toInt()
+            canvas.drawRect(0f, 0f, w, h, coreBloomPaint)
         }
         canvas.restore()
 
-        // 3. Rotating specular rim border on focus, subtle frosted rim when idle
-        if (tileFocused || glowIntensity > 0.01f) {
-            sweepMatrix.setRotate(glowIntensity * 180f, w / 2f, h / 2f)
-            sweepBorderPaint.shader?.setLocalMatrix(sweepMatrix)
-            sweepBorderPaint.strokeWidth = dp(1.8f)
-            sweepBorderPaint.alpha = (255 * if (tileFocused) 1f else glowIntensity).toInt()
-            canvas.drawPath(outerPath, sweepBorderPaint)
-        } else {
-            innerRimPaint.strokeWidth = dp(1f)
-            innerRimPaint.color = Color.argb(75, 255, 255, 255)
-            canvas.drawPath(outerPath, innerRimPaint)
-        }
-
-        // 4. App icon clipped cleanly inside the inner shape
         canvas.save()
         canvas.clipPath(innerIconPath)
         super.dispatchDraw(canvas)
         canvas.restore()
 
-        innerRimPaint.strokeWidth = dp(1f)
-        innerRimPaint.color = if (tileFocused) Color.argb(190, 255, 255, 255) else Color.argb(95, 255, 255, 255)
+        innerRimPaint.strokeWidth = dp(if (tileFocused) 1.6f else 1.1f)
+        innerRimPaint.color = if (tileFocused) Color.argb(225, 255, 255, 255) else Color.argb(110, 255, 255, 255)
+        canvas.drawPath(outerPath, innerRimPaint)
         canvas.drawPath(innerIconPath, innerRimPaint)
     }
 

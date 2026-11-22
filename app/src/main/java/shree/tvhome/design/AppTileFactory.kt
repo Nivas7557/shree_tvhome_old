@@ -166,6 +166,12 @@ object AppTileFactory {
             clipChildren = false
             setStyle(lp.accentColor, lp.tileShape, lp.tileColor, appColor)
         }
+        // Lightweight shader-only update on style change without grid re-layout
+        lp.addStyleListener {
+            if (wrapper.isAttachedToWindow) {
+                innerCard.setStyle(lp.accentColor, lp.tileShape, lp.tileColor, appColor)
+            }
+        }
 
         val iv = ImageView(ctx).apply {
             tag = "tile_icon"
@@ -192,7 +198,13 @@ object AppTileFactory {
             gravity = Gravity.CENTER
         }
         namePlate.addView(tv, FrameLayout.LayoutParams(-1, -2, Gravity.CENTER))
+        namePlate.visibility = when (lp.nameplateMode) {
+            "hidden" -> View.GONE
+            "focus" -> View.INVISIBLE
+            else -> View.VISIBLE
+        }
         unitContainer.addView(namePlate, LinearLayout.LayoutParams(-1, -2).apply {
+
             leftMargin = dp(ctx, 6)
             rightMargin = dp(ctx, 6)
             topMargin = dp(ctx, 3)
@@ -224,6 +236,9 @@ object AppTileFactory {
 
             innerCard.setFocusState(hasFocus)
             namePlate.background = nameplateBg(ctx, hasFocus, appColor)
+            if (lp.nameplateMode == "focus") {
+                namePlate.visibility = if (hasFocus) View.VISIBLE else View.INVISIBLE
+            }
             MotionEngine.animateFocus(unitContainer, hasFocus, lp.motionStyle, 1.11f, 12f, dx, dy)
 
             if (hasFocus) {
@@ -236,17 +251,19 @@ object AppTileFactory {
                     interpolator = AccelerateDecelerateInterpolator()
                     addUpdateListener { anim ->
                         val f = anim.animatedValue as Float
-                        val pulseScale = 1.10f + (0.04f * f)
-                        unitContainer.scaleX = pulseScale
-                        unitContainer.scaleY = pulseScale
+                        // Breathe only the icon card; keep the app nameplate steady and crisp
+                        val iconPulse = 1.0f + (0.045f * f)
+                        innerCard.scaleX = iconPulse
+                        innerCard.scaleY = iconPulse
                         innerCard.updateGlowPulse(f)
                     }
                     start()
                 }
-            } else {
+        } else {
                 tv.isSelected = false
                 breathingAnim?.cancel()
                 breathingAnim = null
+                innerCard.animate().scaleX(1f).scaleY(1f).setDuration(220L).start()
             }
         }
 
@@ -304,9 +321,14 @@ object AppTileFactory {
             card.setStyle(lp.accentColor, lp.tileShape, lp.tileColor, appCol)
         }
         wrapper.findViewWithTag<TextView>("tile_label")?.textSize = if (lp.columns > 6) 9f else 10.2f
+        wrapper.findViewWithTag<View>("name_plate")?.visibility = when (lp.nameplateMode) {
+            "hidden" -> View.GONE
+            "focus" -> if (wrapper.hasFocus()) View.VISIBLE else View.INVISIBLE
+            else -> View.VISIBLE
+        }
         wrapper.findViewWithTag<TextView>("tile_badge")?.let { applyBadgeState(it, lp, isFav) }
     }
-
+}
     private fun nameplateBg(ctx: Context, focused: Boolean, accentColor: Int) = GradientDrawable(
         GradientDrawable.Orientation.LEFT_RIGHT,
         if (focused) intArrayOf(LauncherUtils.withAlpha(accentColor, 225), LauncherUtils.withAlpha(accentColor, 145))
@@ -331,4 +353,3 @@ object AppTileFactory {
         dp(ctx, TileThemePalette.getTileSizeSpec(tileSize).badgeDp)
 
     private fun dp(ctx: Context, v: Int) = LauncherUtils.dp(ctx, v)
-}

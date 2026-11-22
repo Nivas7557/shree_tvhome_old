@@ -168,7 +168,8 @@ class AmbientStageWidget(
         addView(weatherCard, LayoutParams(-1, -2))
 
         refreshStyle()
-        updateTimeDisplay()
+        // Automatically repaint clock & weather stage on theme/accent change without view recreation
+        lp.addStyleListener { refreshStyle() }
     }
 
     private fun weatherCardBg(focused: Boolean) = GradientDrawable(
@@ -385,6 +386,14 @@ class AmbientStageWidget(
         val accent = lp.accentColor
         amPmTv.setTextColor(accent)
         analogView.updateAccent(accent)
+        // Apply selected Glass Palette theme dynamically to the Clock & Weather Stage
+        background = GradientDrawable(
+            GradientDrawable.Orientation.TL_BR,
+            TileThemePalette.getGlassPanelColors(lp.tileColor, accent, elevated = false)
+        ).apply {
+            cornerRadius = LauncherUtils.dpF(context, 24f)
+            setStroke(dp(1), LauncherUtils.withAlpha(accent, 145))
+        }
         weatherCard.background = weatherCardBg(weatherCard.hasFocus())
 
         val minWidth = TileThemePalette.PANEL_WIDTH_OPTIONS.first()

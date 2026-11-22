@@ -117,8 +117,8 @@ object SystemSubPanels {
             panel.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = bottomPad })
         }
 
-        addHeader(ctx, panel, lp, "HARDWARE CONTROLS")
-        addSliderCard(ctx, panel, lp, "☀  Screen Brightness", curBright) { p ->
+        PanelUiKit.addSectionHeader(ctx, panel, lp, "HARDWARE CONTROLS")
+        PanelUiKit.addGlossyPillSlider(ctx, panel, lp, "☀", "Screen Brightness", curBright) { p ->
             lp.pictureMode = "Custom"
             lp.customBrightnessPct = p
             applyBrightness(ctx, p)
@@ -129,12 +129,17 @@ object SystemSubPanels {
             val maxVol = am?.getStreamMaxVolume(AudioManager.STREAM_MUSIC) ?: 15
             val curVol = am?.getStreamVolume(AudioManager.STREAM_MUSIC) ?: 10
             val volPct = ((curVol * 100f) / maxOf(1, maxVol)).toInt()
-            addSliderCard(ctx, panel, lp, "🔊  Master Volume", volPct) { p ->
+            PanelUiKit.addGlossyPillSlider(ctx, panel, lp, "🔊", "Master Volume", volPct) { p ->
                 am?.setStreamVolume(AudioManager.STREAM_MUSIC, ((p / 100f) * maxVol).toInt(), AudioManager.FLAG_SHOW_UI)
             }
         }
 
-        val ramRow = makeActionRow(ctx, lp, "🚀", "Boost Memory (RAM)", getRamStatusText(ctx)) {
+        val ambientRow = PanelUiKit.makeActionRow(ctx, lp, "🕰️", "Ambient Clock Screensaver", "Full-screen clock, weather & live scene") {
+            ctx.sendBroadcast(Intent("shree.tvhome.ACTION_ENTER_AMBIENT").setPackage(ctx.packageName))
+        }
+        panel.addView(ambientRow, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 6) })
+
+        val ramRow = PanelUiKit.makeActionRow(ctx, lp, "🚀", "Boost Memory (RAM)", getRamStatusText(ctx)) {
             Runtime.getRuntime().gc()
             Toast.makeText(ctx, "Memory optimized!", Toast.LENGTH_SHORT).show()
         }
