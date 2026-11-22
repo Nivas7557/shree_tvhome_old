@@ -339,7 +339,17 @@ class MainActivity : Activity() {
 
         setupRightDrawer(contentArea)
         val nudgeView = topNavBar.createFloatingNudgeView()
-        rootLayout.addView(nudgeView, FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.START).apply { topMargin = dp(52); leftMargin = dp(235) })
+        val nudgeParams = FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.START).apply {
+            topMargin = dp(52)
+        }
+        rootLayout.addView(nudgeView, nudgeParams)
+        
+        // Position nudge bubble dynamically after TopNavBar measures its profile card width
+        topNavBar.post {
+            val profileGroup = topNavBar.getChildAt(1)
+            nudgeParams.leftMargin = (profileGroup?.right ?: dp(180)) + dp(12)
+            nudgeView.requestLayout()
+        }
         setContentView(rootLayout)
         syncAppGrid(allowFocusRestore = false)
     }
