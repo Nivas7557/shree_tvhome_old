@@ -14,6 +14,7 @@ class TvNotificationService : NotificationListenerService() {
 
     data class RealAlert(
         val key: String,
+        val packageName: String?,
         val appName: String,
         val title: String,
         val text: String,
@@ -97,6 +98,7 @@ class TvNotificationService : NotificationListenerService() {
                 updated.add(
                     RealAlert(
                         key = sbn.key,
+                        packageName = sbn.packageName,
                         appName = appLabel,
                         title = title.ifEmpty { appLabel },
                         text = body.ifEmpty { "New notification from $appLabel" },
