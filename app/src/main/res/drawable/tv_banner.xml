@@ -2,9 +2,8 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@drawable/ic_launcher_background" />
     <item
-        android:left="88dp"
-        android:right="88dp"
-        android:top="18dp"
-        android:bottom="18dp"
+        android:width="136dp"
+        android:height="136dp"
+        android:gravity="center"
         android:drawable="@drawable/ic_launcher_foreground" />
 </layer-list>
