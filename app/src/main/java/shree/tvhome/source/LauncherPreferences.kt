@@ -5,6 +5,22 @@ import android.content.SharedPreferences
 
 class LauncherPreferences(context: Context) {
 
+    private val prefs = context.getSharedPreferences("shree_tv_prefs", Context.MODE_PRIVATE)
+    private val styleListeners = java.util.concurrent.CopyOnWriteArrayList<() -> Unit>()
+
+    // Register lightweight listeners so existing views repaint colors naturally without recreating layouts
+    fun addStyleListener(listener: () -> Unit) {
+        if (!styleListeners.contains(listener)) styleListeners.add(listener)
+    }
+
+    fun removeStyleListener(listener: () -> Unit) {
+        styleListeners.remove(listener)
+    }
+
+    private fun notifyStyleChanged() {
+        for (listener in styleListeners) listener()
+    }
+        
     companion object {
         const val PREFS = "launcher_preferences"
         const val PREF_ACCENT = "accent_color"
@@ -62,14 +78,16 @@ class LauncherPreferences(context: Context) {
     val prefs: SharedPreferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
     var accentColor: Int
-        get() = prefs.getInt(PREF_ACCENT, TileThemePalette.ACCENTS.first().color)
-        set(value) = prefs.edit().putInt(PREF_ACCENT, value).apply()
+        get() = prefs.getInt(PREF_ACCENT_COLOR, TileThemePalette.ACCENTS.first().color)
+        set(value) {
+            prefs.edit().putInt(PREF_ACCENT_COLOR, value).apply()
+            notifyStyleChanged()
+        }
 
     var accentName: String
-        get() = prefs.getString(PREF_ACCENT_NAME, TileThemePalette.ACCENTS.first().label)
-            ?: TileThemePalette.ACCENTS.first().label
+        get() = prefs.getString(PREF_ACCENT_NAME, TileThemePalette.ACCENTS.first().label) ?: TileThemePalette.ACCENTS.first().label
         set(value) = prefs.edit().putString(PREF_ACCENT_NAME, value).apply()
-
+        
     var tileSize: String
         get() = prefs.getString(PREF_TILE_SIZE, TileThemePalette.getTileSizeSpec("medium").key)
             ?: TileThemePalette.getTileSizeSpec("medium").key
@@ -81,9 +99,11 @@ class LauncherPreferences(context: Context) {
         set(value) = prefs.edit().putString(PREF_TILE_SHAPE, value).apply()
 
     var tileColor: String
-        get() = prefs.getString(PREF_TILE_COLOR, TileThemePalette.THEMES.first().key)
-            ?: TileThemePalette.THEMES.first().key
-        set(value) = prefs.edit().putString(PREF_TILE_COLOR, value).apply()
+        get() = prefs.getString(PREF_TILE_COLOR, TileThemePalette.THEMES.first().key) ?: TileThemePalette.THEMES.first().key
+        set(value) {
+            prefs.edit().putString(PREF_TILE_COLOR, value).apply()
+            notifyStyleChanged()
+        }
 
     var badgeMode: String
         get() = prefs.getString(PREF_BADGE, TileThemePalette.BADGE_MODES.first().key)
