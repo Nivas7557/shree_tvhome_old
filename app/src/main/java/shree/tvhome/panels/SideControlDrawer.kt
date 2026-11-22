@@ -56,37 +56,63 @@ class SideControlDrawer(
         const val MODE_SUB_STORAGE = "sub_storage"
     }
 
-    private data class DrawerHeaderSpec(val mode: String, val icon: String, val title: String, val navTag: String)
-    private data class QuickTileSpec(val icon: String, val title: String, val subtitle: String, val targetMode: String)
-    private data class PicturePresetSpec(val name: String, val brightness: Int)
-
-    private val drawerHeaders = listOf(
-        DrawerHeaderSpec(MODE_CUSTOMIZE, "✦  ", "Customize Launcher", "nav_customize"),
-        DrawerHeaderSpec(MODE_WIFI, "📶  ", "Network & Internet", "nav_wifi"),
-        DrawerHeaderSpec(MODE_ALERTS, "🔔  ", "Alerts & Notifications", "nav_alerts"),
-        DrawerHeaderSpec(MODE_POWER, "⏻  ", "Power & System", "nav_power"),
-        DrawerHeaderSpec(MODE_WALLPAPER_EDIT, "🖼  ", "Wallpaper Studio", "nav_customize"),
-        DrawerHeaderSpec(MODE_SUB_INPUTS, "📺  ", "TV Inputs & HDMI", "nav_quick"),
-        DrawerHeaderSpec(MODE_SUB_PICTURE, "☀  ", "Display & Sleep Timer", "nav_quick"),
-        DrawerHeaderSpec(MODE_SUB_SOUND, "🔊  ", "Sound & Audio Out", "nav_quick"),
-        DrawerHeaderSpec(MODE_SUB_BLUETOOTH, "🔵  ", "Bluetooth & Remotes", "nav_quick"),
-        DrawerHeaderSpec(MODE_SUB_STORAGE, "💾  ", "Storage & Installed Apps", "nav_quick")
+    private data class DrawerHeaderSpec(
+        val mode: String,
+        val icon: String,
+        val title: String,
+        val navTag: String,
+        val render: (LinearLayout) -> Unit
     )
 
-    private val picturePresets = listOf(
-        PicturePresetSpec("Standard", 80),
-        PicturePresetSpec("Cinema / Movie", 65),
-        PicturePresetSpec("Vivid", 100),
-        PicturePresetSpec("Night Eye-Care", 35)
-    )
+    private val drawerHeaders: List<DrawerHeaderSpec> by lazy {
+        listOf(
+            DrawerHeaderSpec(MODE_QUICK, "⚙  ", "Quick Settings", "nav_quick") { panel ->
+                SystemSubPanels.buildQuickSettingsMain(context, panel, lp) { targetMode -> open(targetMode) }
+            },
+            DrawerHeaderSpec(MODE_CUSTOMIZE, "✦  ", "Customize Launcher", "nav_customize") { panel ->
+                CustomizeMenuBuilder.build(
+                    context, panel, lp, onLiveRefresh, { populateActivePanel() },
+                    ::showProfileEditDialog,
+                    { open(MODE_WALLPAPER_EDIT) },
+                    onOpenHiddenRibbon,
+                    ::close
+                )
+            },
+            DrawerHeaderSpec(MODE_WIFI, "📶  ", "Network & Internet", "nav_wifi") { panel ->
+                WifiPanelBuilder.build(context, panel, lp) { populateActivePanel() }
+            },
+            DrawerHeaderSpec(MODE_ALERTS, "🔔  ", "Alerts & Notifications", "nav_alerts") { panel ->
+                buildRealAlertsPanel(panel)
+            },
+            DrawerHeaderSpec(MODE_POWER, "⏻  ", "Power & System", "nav_power") { panel ->
+                buildPowerPanel(panel)
+            },
+            DrawerHeaderSpec(MODE_WALLPAPER_EDIT, "🖼  ", "Wallpaper Studio", "nav_customize") { panel ->
+                WallpaperEditorPanel.build(context, panel, lp, onWallpaperRefresh, onPickWallpaper) { open(MODE_CUSTOMIZE) }
+            },
+            DrawerHeaderSpec(MODE_SUB_INPUTS, "📺  ", "TV Inputs & HDMI", "nav_quick") { panel ->
+                SystemSubPanels.buildInputsSubPanel(context, panel, lp) { open(MODE_QUICK) }
+            },
+            DrawerHeaderSpec(MODE_SUB_PICTURE, "☀  ", "Display & Sleep Timer", "nav_quick") { panel ->
+                SystemSubPanels.buildPictureAndDisplayPanel(context, panel, lp) { open(MODE_QUICK) }
+            },
+            DrawerHeaderSpec(MODE_SUB_SOUND, "🔊  ", "Sound & Audio Out", "nav_quick") { panel ->
+                SystemSubPanels.buildSoundSubPanel(context, panel, lp) { open(MODE_QUICK) }
+            },
+            DrawerHeaderSpec(MODE_SUB_BLUETOOTH, "🔵  ", "Bluetooth & Remotes", "nav_quick") { panel ->
+                SystemSubPanels.buildBluetoothPanel(context, panel, lp) { open(MODE_QUICK) }
+            },
+            DrawerHeaderSpec(MODE_SUB_STORAGE, "💾  ", "Storage & Installed Apps", "nav_quick") { panel ->
+                SystemSubPanels.buildStorageAndAppsPanel(context, panel, lp) { open(MODE_QUICK) }
+            }
+        )
+    }
 
     var isOpen = false
         private set
     private var currentMode = ""
     private var activeScroll: ScrollView? = null
     private var activePanel: LinearLayout? = null
-    private var brightnessPct = getCurrentSystemBrightnessPct()
-    private var selectedPicturePreset = picturePresets.first().name
     private var stageWidget: View? = null
 
     fun attachStageWidget(widget: View) {
@@ -96,16 +122,29 @@ class SideControlDrawer(
     fun getActivePanelView(): ViewGroup? = activePanel
 
     fun getParentNavTag(): String =
-        drawerHeaders.find { it.mode == currentMode }?.navTag ?: "nav_quick"
+        drawerHeaders.find { it.mode == currentMode }?.navTag ?: drawerHeaders.first().navTag
 
     fun toggle(mode: String) {
         if (isOpen && mode == currentMode) close() else open(mode)
+    }
+
+    private fun setBackgroundSiblingsFocusable(enabled: Boolean) {
+        val parent = drawerLayout.parent as? ViewGroup ?: return
+        val focusability = if (enabled) ViewGroup.FOCUS_AFTER_DESCENDANTS else ViewGroup.FOCUS_BLOCK_DESCENDANTS
+        for (i in 0 until parent.childCount) {
+            val child = parent.getChildAt(i)
+            if (child !== drawerLayout && child !== scrim) {
+                (child as? ViewGroup)?.descendantFocusability = focusability
+            }
+        }
     }
 
     fun open(mode: String) {
         val wasOpen = isOpen
         currentMode = mode
         isOpen = true
+
+        setBackgroundSiblingsFocusable(false)
 
         val screenW = context.resources.displayMetrics.widthPixels
         val minStageW = LauncherUtils.dp(context, TileThemePalette.PANEL_MIN_WIDTH_DP)
@@ -128,28 +167,36 @@ class SideControlDrawer(
         setupDrawerSkeleton()
         populateActivePanel()
 
-        drawerLayout.post {
-            FocusTrap.focusFirstInPanel(activePanel, drawerLayout)
-        }
-
         if (!wasOpen) {
             MotionEngine.resetTransform(drawerLayout)
-            MotionEngine.animatePanelEnter(drawerLayout, stageWidget, dynamicDrawerW, lp.motionStyle) {}
+            MotionEngine.animatePanelEnter(drawerLayout, stageWidget, dynamicDrawerW, lp.motionStyle) {
+                FocusTrap.focusFirstInPanel(activePanel, drawerLayout)
+            }
         } else {
             MotionEngine.playDemoPreview(drawerLayout, lp.motionStyle)
+            drawerLayout.post {
+                FocusTrap.focusFirstInPanel(activePanel, drawerLayout)
+            }
         }
     }
 
     fun close() {
         if (!isOpen) return
-        isOpen = false; currentMode = ""
+        val returnTag = getParentNavTag()
+        isOpen = false
+        currentMode = ""
         val out = maxOf(dp(340f), drawerLayout.width + dp(30f))
 
+        setBackgroundSiblingsFocusable(true)
+
         MotionEngine.animatePanelExit(drawerLayout, stageWidget, out, lp.motionStyle) {
-            scrim.visibility = View.GONE; drawerLayout.visibility = View.GONE
+            scrim.visibility = View.GONE
+            drawerLayout.visibility = View.GONE
+            mainPage.findViewWithTag<View>(returnTag)?.requestFocus()
         }
         drawerLayout.post { onLiveRefresh() }
     }
+
     private fun setupDrawerSkeleton() {
         drawerLayout.removeAllViews()
         drawerLayout.setPadding(dp(14f), dp(14f), dp(14f), dp(14f))
@@ -199,24 +246,10 @@ class SideControlDrawer(
     private fun populateActivePanel() {
         val panel = activePanel ?: return
         panel.removeAllViews()
-
-        when (currentMode) {
-            MODE_CUSTOMIZE -> CustomizeMenuBuilder.build(
-                context, panel, lp, onLiveRefresh, { populateActivePanel() },
-                ::showProfileEditDialog,
-                { open(MODE_WALLPAPER_EDIT) },
-                onOpenHiddenRibbon,
-                ::close
-            )
-            MODE_WALLPAPER_EDIT -> WallpaperEditorPanel.build(context, panel, lp, onWallpaperRefresh, onPickWallpaper) { open(MODE_CUSTOMIZE) }
-            MODE_SUB_INPUTS -> SystemSubPanels.buildInputsSubPanel(context, panel, lp) { open(MODE_QUICK) }
-            MODE_SUB_PICTURE -> SystemSubPanels.buildPictureAndDisplayPanel(context, panel, lp) { open(MODE_QUICK) }
-            MODE_SUB_SOUND -> SystemSubPanels.buildSoundSubPanel(context, panel, lp) { open(MODE_QUICK) }
-            MODE_SUB_BLUETOOTH -> SystemSubPanels.buildBluetoothPanel(context, panel, lp) { open(MODE_QUICK) }
-            MODE_SUB_STORAGE -> SystemSubPanels.buildStorageAndAppsPanel(context, panel, lp) { open(MODE_QUICK) }
-            else -> SystemSubPanels.buildQuickSettingsMain(context, panel, lp) { targetMode -> open(targetMode) }
-        }
+        val spec = drawerHeaders.find { it.mode == currentMode } ?: drawerHeaders.first()
+        spec.render(panel)
     }
+}
 
     private fun buildControlCenter(panel: LinearLayout) {
         addLabel(panel, "SYSTEM CONTROLS (IN-APP GLOSSY)")
