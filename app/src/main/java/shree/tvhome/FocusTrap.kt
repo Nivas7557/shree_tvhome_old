@@ -11,9 +11,8 @@ object FocusTrap {
 
     fun findFirstFocusable(root: View): View? {
         if (root.visibility != View.VISIBLE || !root.isEnabled) return null
-        val isLeafFocusable = root !is ViewGroup && (root.isFocusable || root.isClickable)
-        val isContainerFocusable = root is ViewGroup && root.isFocusable && !root.isFocusableInTouchMode && root.childCount == 0
-        if (isLeafFocusable || isContainerFocusable) {
+        // Match any leaf view or focusable ViewGroup card (even when it contains child TextViews)
+        if (root.isFocusable && !root.isFocusableInTouchMode) {
             return root
         }
         if (root is ViewGroup) {
@@ -24,6 +23,7 @@ object FocusTrap {
         }
         return null
     }
+
 
     fun focusFirstInPanel(panel: ViewGroup?, fallbackContainer: ViewGroup? = null): Boolean {
         val target = (panel?.let { findFirstFocusable(it) })
