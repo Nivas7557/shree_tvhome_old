@@ -236,8 +236,7 @@ object CustomizeMenuBuilder {
             }
             panel.addView(r, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 5) })
         }
-
-        PanelUiKit.addSectionHeader(ctx, panel, lp, "ACCENT AURA")
+                PanelUiKit.addSectionHeader(ctx, panel, lp, "ACCENT AURA")
         val swatchRow = LinearLayout(ctx).apply {
             orientation = LinearLayout.HORIZONTAL
             clipChildren = false
@@ -246,26 +245,29 @@ object CustomizeMenuBuilder {
         val swatchViews = ArrayList<Pair<Int, View>>()
         TileThemePalette.ACCENTS.forEachIndexed { idx, spec ->
             val col = spec.color
-            val isSel = lp.accentColor == col
             val dot = View(ctx).apply {
                 isFocusable = true
                 isClickable = true
-                background = swatchBg(ctx, col, isSel)
+                background = swatchBg(ctx, col, lp.accentColor == col)
                 setOnFocusChangeListener { v, f ->
                     MotionEngine.animateFocus(v, f, lp.motionStyle, 1.12f, 5f)
                     v.background = swatchBg(ctx, col, f || lp.accentColor == col)
                 }
-                    setOnClickListener {
-                    // Simply update preference; all registered views repaint naturally with zero RAM rebuild
+                setOnClickListener {
                     lp.accentColor = col
                     lp.accentName = spec.label
+                    swatchViews.forEach { (c, v) ->
+                        v.background = swatchBg(ctx, c, v.hasFocus() || c == lp.accentColor)
+                    }
                 }
+            }
             swatchViews.add(col to dot)
             swatchRow.addView(dot, LinearLayout.LayoutParams(0, dp(ctx, 32), 1f).apply {
                 if (idx < TileThemePalette.ACCENTS.lastIndex) rightMargin = dp(ctx, 6)
             })
         }
         panel.addView(swatchRow, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 6) })
+
         PanelUiKit.addSectionHeader(ctx, panel, lp, "TILE GLASS PALETTE")
         TileThemePalette.THEMES.chunked(2).forEach { rowChunk ->
             val row = LinearLayout(ctx).apply {
@@ -318,7 +320,6 @@ object CustomizeMenuBuilder {
             }
             panel.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 5) })
         }
-
         PanelUiKit.addSectionHeader(ctx, panel, lp, "FAVORITE BADGE")
         PanelUiKit.addSegmentedTrack(
             ctx, panel, lp,
