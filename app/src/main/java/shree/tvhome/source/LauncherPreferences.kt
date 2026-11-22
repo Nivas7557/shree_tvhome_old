@@ -98,17 +98,30 @@ class LauncherPreferences(context: Context) {
             value.coerceIn(TileThemePalette.PANEL_WIDTH_OPTIONS.first(), TileThemePalette.PANEL_WIDTH_OPTIONS.last())
         ).apply()
 
-    // Dynamically derive initial profile name from device hardware model
-    private val defaultDeviceOwner: String
-        get() = android.os.Build.MODEL
-            ?.substringBefore(' ')
+    // Dynamically resolve actual user-configured TV Device Name from Android Settings
+    private val defaultDeviceOwner: String by lazy {
+        val resolver = context.contentResolver
+        val globalName = try {
+            android.provider.Settings.Global.getString(resolver, android.provider.Settings.Global.DEVICE_NAME)
+        } catch (_: Exception) { null }
+
+        val btName = try {
+            android.provider.Settings.Secure.getString(resolver, "bluetooth_name")
+        } catch (_: Exception) { null }
+
+        val manufacturer = android.os.Build.MANUFACTURER
             ?.replaceFirstChar { it.uppercase() }
-            ?.takeIf { it.isNotBlank() } ?: "TV"
+            ?.takeIf { it.isNotBlank() }
+
+        listOf(globalName, btName, manufacturer, "TV")
+            .firstOrNull { !it.isNullOrBlank() && !it.equals("unknown", ignoreCase = true) }
+            ?.trim() ?: "TV"
+    }
 
     var userName: String
         get() = prefs.getString(PREF_USER_NAME, defaultDeviceOwner) ?: defaultDeviceOwner
         set(value) = prefs.edit().putString(PREF_USER_NAME, value.ifBlank { defaultDeviceOwner }).apply()
-
+        
     var greetingPhrase: String
         get() = prefs.getString(PREF_GREETING_PHRASE, "") ?: ""
         set(value) = prefs.edit().putString(PREF_GREETING_PHRASE, value).apply()
