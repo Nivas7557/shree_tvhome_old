@@ -1,6 +1,5 @@
 package shree.tvhome.panels
 
-import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
@@ -16,7 +15,6 @@ import android.view.Gravity
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
-import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import shree.tvhome.source.LauncherPreferences
@@ -27,153 +25,6 @@ import java.util.Locale
 
 object PanelUiKit {
 
-    fun addSectionHeader(ctx: Context, parent: LinearLayout, lp: LauncherPreferences, label: String) {
-        val tv = TextView(ctx).apply {
-            text = label.uppercase(Locale.ROOT)
-            textSize = 8.8f
-            typeface = Typeface.DEFAULT_BOLD
-            letterSpacing = 0.09f
-        }
-        val applyColor = {
-            val surfaceColors = TileThemePalette.getTheme(lp.tileColor).normalColors
-            tv.setTextColor(
-                if (TileThemePalette.isLightSurface(surfaceColors)) {
-                    TileThemePalette.getAdaptiveTextColor(surfaceColors, secondary = false)
-                } else {
-                    lp.accentColor
-                }
-            )
-        }
-        applyColor()
-        lp.addStyleListener(applyColor)
-        parent.addView(tv, LinearLayout.LayoutParams(-1, -2).apply {
-            topMargin = dp(ctx, 10)
-            bottomMargin = dp(ctx, 5)
-        })
-    }
-
-    fun glassCardBg(ctx: Context, accent: Int, active: Boolean, themeKey: String? = null) = GradientDrawable(
-        GradientDrawable.Orientation.TL_BR,
-        if (active) {
-            intArrayOf(
-                LauncherUtils.withAlpha(accent, 185),
-                LauncherUtils.withAlpha(accent, 95)
-            )
-        } else {
-            val base = TileThemePalette.getTheme(themeKey).normalColors
-            intArrayOf(
-                LauncherUtils.blendWithAccent(base[0], accent, 0.14f, 145),
-                LauncherUtils.withAlpha(base[1], 115)
-            )
-        }
-    ).apply {
-        cornerRadius = LauncherUtils.dpF(ctx, 14f)
-        setStroke(dp(ctx, if (active) 2 else 1), if (active) Color.WHITE else LauncherUtils.withAlpha(accent, 95))
-    }
-
-    // Adaptive tvOS segmented track that automatically resizes thumb when panel width changes (20%-35%)
-    fun addSegmentedTrack(
-        ctx: Context,
-        parent: LinearLayout,
-        lp: LauncherPreferences,
-        options: List<Pair<String, String>>,
-        getSelected: () -> String,
-        onSelect: (String) -> Unit
-    ) {
-        val track = FrameLayout(ctx).apply {
-            setPadding(dp(ctx, 3), dp(ctx, 3), dp(ctx, 3), dp(ctx, 3))
-            clipChildren = false
-            clipToPadding = false
-            background = GradientDrawable(
-                GradientDrawable.Orientation.TOP_BOTTOM,
-                intArrayOf(Color.argb(95, 10, 16, 38), Color.argb(65, 22, 34, 72))
-            ).apply {
-                cornerRadius = LauncherUtils.dpF(ctx, 14f)
-                setStroke(dp(ctx, 1), LauncherUtils.withAlpha(lp.accentColor, 85))
-            }
-        }
-
-        val activeThumb = View(ctx).apply {
-            background = GradientDrawable(
-                GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(LauncherUtils.withAlpha(lp.accentColor, 225), LauncherUtils.withAlpha(lp.accentColor, 145))
-            ).apply {
-                cornerRadius = LauncherUtils.dpF(ctx, 11f)
-                setStroke(dp(ctx, 1), Color.WHITE)
-            }
-        }
-        track.addView(activeThumb, FrameLayout.LayoutParams(0, dp(ctx, 30)))
-
-        val row = LinearLayout(ctx).apply {
-            orientation = LinearLayout.HORIZONTAL
-            clipChildren = false
-            clipToPadding = false
-        }
-
-        val itemViews = ArrayList<Pair<String, TextView>>()
-        options.forEach { (key, label) ->
-            val tv = TextView(ctx).apply {
-                text = label
-                textSize = 9.2f
-                typeface = Typeface.DEFAULT_BOLD
-                setTextColor(Color.WHITE)
-                gravity = Gravity.CENTER
-                isSingleLine = true
-                ellipsize = TextUtils.TruncateAt.END
-                isFocusable = true
-                isClickable = true
-                setOnFocusChangeListener { v, f ->
-                    MotionEngine.animateFocus(v, f, lp.motionStyle, 1.04f, 4f)
-                    if (f) {
-                        v.background = GradientDrawable().apply {
-                setTextColor(if (TileThemePalette.isLightTheme(lp.tileColor)) Color.rgb(18, 52, 128) else lp.accentColor)
-                letterSpacing = 0.09f
-            },
-            LinearLayout.LayoutParams(-1, -2).apply {
-                topMargin = dp(ctx, 10)
-                bottomMargin = dp(ctx, 5)
-            }
-        )
-    }
-
-    fun glassCardBg(ctx: Context, accent: Int, active: Boolean, themeKey: String? = null) = GradientDrawable(
-        GradientDrawable.Orientation.TOP_BOTTOM,
-        if (active) {
-            intArrayOf(
-                LauncherUtils.withAlpha(accent, 225),
-                LauncherUtils.withAlpha(accent, 145)
-            )
-        } else {
-            val base = TileThemePalette.getTheme(themeKey).normalColors
-            intArrayOf(
-                LauncherUtils.blendWithAccent(base[0], accent, 0.14f, 185),
-                LauncherUtils.withAlpha(base[1], 155)
-            )
-        }
-    ).apply {
-        cornerRadius = LauncherUtils.dpF(ctx, 14f)
-        setStroke(
-            dp(ctx, if (active) 2 else 1),
-            if (active) Color.WHITE else LauncherUtils.withAlpha(accent, 115)
-        )
-    }
-
-    // Smooth, zero-jitter segmented option row using user's selected MotionEngine style
-    fun addSegmentedTrack(
-        ctx: Context,
-        parent: LinearLayout,
-        lp: LauncherPreferences,
-        options: List<Pair<String, String>>,
-        getSelected: () -> String,
-        onSelect: (String) -> Unit
-    ) {
-        val row = LinearLayout(ctx).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setPadding(dp(ctx, 3), dp(ctx, 3), dp(ctx, 3), dp(ctx, 3))
-            clipChildren = false
-            clipToPadding = false
-            background = GradientDrawable(
-                GradientDrawable.Orientation.TOP_BOTTOM,
     fun addSectionHeader(ctx: Context, parent: LinearLayout, lp: LauncherPreferences, label: String) {
         val tv = TextView(ctx).apply {
             text = label.uppercase(Locale.ROOT)
@@ -294,10 +145,6 @@ object PanelUiKit {
         lp.addStyleListener(refreshChips)
         parent.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 6) })
     }
-        track.addView(row, FrameLayout.LayoutParams(-1, -2))
-                }
-
-    // Thick tvOS-style glossy pill progress slider supporting D-Pad Left/Right & Touch
     fun addGlossyPillSlider(
         ctx: Context,
         parent: LinearLayout,
@@ -313,7 +160,6 @@ object PanelUiKit {
             private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
             private val borderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
             private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = Color.WHITE
                 typeface = Typeface.DEFAULT_BOLD
             }
             private val clipPath = Path()
@@ -323,6 +169,7 @@ object PanelUiKit {
             init {
                 isFocusable = true
                 isClickable = true
+                lp.addStyleListener { invalidate() }
                 setOnFocusChangeListener { v, f ->
                     isFocusedState = f
                     MotionEngine.animateFocus(v, f, lp.motionStyle, 1.02f, 5f)
@@ -372,22 +219,23 @@ object PanelUiKit {
                 canvas.save()
                 canvas.clipPath(clipPath)
 
-                trackPaint.color = Color.argb(58, 16, 24, 52)
+                trackPaint.color = Color.argb(68, 16, 24, 52)
                 canvas.drawRect(rect, trackPaint)
 
                 val fillW = w * (currentPct / 100f)
                 fillPaint.shader = LinearGradient(
                     0f, 0f, fillW.coerceAtLeast(1f), 0f,
-                    intArrayOf(LauncherUtils.withAlpha(lp.accentColor, 210), LauncherUtils.withAlpha(lp.accentColor, 130)),
+                    intArrayOf(LauncherUtils.withAlpha(lp.accentColor, 225), LauncherUtils.withAlpha(lp.accentColor, 140)),
                     null, Shader.TileMode.CLAMP
                 )
                 canvas.drawRect(0f, 0f, fillW, h, fillPaint)
                 canvas.restore()
 
                 borderPaint.strokeWidth = LauncherUtils.dpF(ctx, if (isFocusedState) 2f else 1f)
-                borderPaint.color = if (isFocusedState) Color.WHITE else Color.argb(75, 255, 255, 255)
+                borderPaint.color = if (isFocusedState) Color.WHITE else LauncherUtils.withAlpha(lp.accentColor, 110)
                 canvas.drawRoundRect(rect, r, r, borderPaint)
 
+                textPaint.color = TileThemePalette.getPrimaryTextColor(lp.tileColor)
                 textPaint.textSize = LauncherUtils.dpF(ctx, 10.5f)
                 textPaint.textAlign = Paint.Align.LEFT
                 val ty = (h / 2f) - ((textPaint.descent() + textPaint.ascent()) / 2f)
@@ -399,7 +247,7 @@ object PanelUiKit {
         }
         parent.addView(sliderView, LinearLayout.LayoutParams(-1, dp(ctx, 40)).apply { bottomMargin = dp(ctx, 7) })
     }
-    // Dual-tone gradient mini-orb for theme palette cards
+
     fun createThemeOrbView(ctx: Context, colors: IntArray, selected: Boolean): View = object : View(ctx) {
         private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
         private val ringPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
