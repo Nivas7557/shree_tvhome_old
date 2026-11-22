@@ -110,9 +110,14 @@ class NightNudgeReceiver : BroadcastReceiver() {
     )
 
     override fun onReceive(context: Context, intent: Intent?) {
+        val appCtx = context.applicationContext
+        // Skip floating nudges when Do Not Disturb is active
+        if (LauncherPreferences(appCtx).dndEnabled) {
+            scheduleNextNudge(appCtx)
+            return
+        }
         val cal = Calendar.getInstance()
         val mins = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
-        val appCtx = context.applicationContext
 
         val spec = nudgeWindows.find { mins in it.minuteRange }
         if (spec != null) {
