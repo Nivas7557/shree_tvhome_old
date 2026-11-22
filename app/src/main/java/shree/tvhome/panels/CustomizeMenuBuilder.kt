@@ -255,15 +255,11 @@ object CustomizeMenuBuilder {
                     MotionEngine.animateFocus(v, f, lp.motionStyle, 1.12f, 5f)
                     v.background = swatchBg(ctx, col, f || lp.accentColor == col)
                 }
-                setOnClickListener {
+                    setOnClickListener {
+                    // Simply update preference; all registered views repaint naturally with zero RAM rebuild
                     lp.accentColor = col
                     lp.accentName = spec.label
-                    swatchViews.forEach { (c, v) ->
-                        v.background = swatchBg(ctx, c, v.hasFocus() || c == lp.accentColor)
-                    }
-                    onLiveRefresh()
                 }
-            }
             swatchViews.add(col to dot)
             swatchRow.addView(dot, LinearLayout.LayoutParams(0, dp(ctx, 32), 1f).apply {
                 if (idx < TileThemePalette.ACCENTS.lastIndex) rightMargin = dp(ctx, 6)
@@ -292,9 +288,8 @@ object CustomizeMenuBuilder {
                         v.background = PanelUiKit.glassCardBg(ctx, lp.accentColor, f || lp.tileColor == theme.key)
                     }
                     setOnClickListener {
+                        // Natural property update without rebuilding panel or grid views
                         lp.tileColor = theme.key
-                        onLiveRefresh()
-                        onRefreshPanel()
                     }
                     addView(
                         PanelUiKit.createThemeOrbView(ctx, theme.focusedColors, isSel),
