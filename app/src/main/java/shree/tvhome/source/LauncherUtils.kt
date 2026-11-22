@@ -60,12 +60,20 @@ object LauncherUtils {
         MotionEngine.animateFocus(view, focused, style, scale, elevationDp)
     }
 
-    fun withAlpha(color: Int, alpha: Int): Int {
+        fun withAlpha(color: Int, alpha: Int): Int {
         return Color.argb(
             alpha.coerceIn(0, 255),
             Color.red(color),
             Color.green(color),
             Color.blue(color)
         )
+    }
+
+    fun blendWithAccent(baseColor: Int, accentColor: Int, ratio: Float, alpha: Int): Int {
+        val t = ratio.coerceIn(0f, 1f)
+        val r = (Color.red(baseColor) + (Color.red(accentColor) - Color.red(baseColor)) * t).toInt()
+        val g = (Color.green(baseColor) + (Color.green(accentColor) - Color.green(baseColor)) * t).toInt()
+        val b = (Color.blue(baseColor) + (Color.blue(accentColor) - Color.blue(baseColor)) * t).toInt()
+        return Color.argb(alpha.coerceIn(0, 255), r, g, b)
     }
 }
