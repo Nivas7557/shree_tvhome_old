@@ -1,20 +1,41 @@
 package shree.tvhome.panels
 
+import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.text.InputType
 import android.view.Gravity
 import android.view.View
+import android.view.Window
+import android.view.WindowManager
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
+import shree.tvhome.source.LauncherBackground
 import shree.tvhome.source.LauncherPreferences
 import shree.tvhome.source.LauncherUtils
 import shree.tvhome.source.MotionEngine
 import shree.tvhome.source.TileThemePalette
-import java.util.Locale
 
 object CustomizeMenuBuilder {
+
+    private data class MoodPresetSpec(
+        val icon: String,
+        val title: String,
+        val tileTheme: String,
+        val accentKey: String,
+        val motionKey: String,
+        val sceneKey: String
+    )
+
+    private val moodPresets = listOf(
+        MoodPresetSpec("🎬", "Cinema", "dark", "sunset", "silk", LauncherBackground.MODE_SUNSET),
+        MoodPresetSpec("⚡", "Cyber", "cyber", "magenta", "jelly", LauncherBackground.MODE_PASTEL),
+        MoodPresetSpec("💎", "Crystal", "crystal", "royal", "levitate", LauncherBackground.MODE_MORNING)
+    )
 
     private var activeSubMenuRow: LinearLayout? = null
     private var activeAnchorButton: View? = null
@@ -23,7 +44,6 @@ object CustomizeMenuBuilder {
 
     fun closeSubMenuWithAnimation() {
         val row = activeSubMenuRow ?: return
-        val anchor = activeAnchorButton
         activeSubMenuRow = null
         activeAnchorButton = null
         row.animate().alpha(0f).scaleY(0.85f).setDuration(180L).withEndAction {
@@ -52,16 +72,57 @@ object CustomizeMenuBuilder {
         activeSubMenuRow = null
         activeAnchorButton = null
 
-        addHeader(ctx, panel, "ACCOUNT & VISIBILITY")
+        PanelUiKit.addSectionHeader(ctx, panel, lp, "ONE-TAP MOOD PRESETS")
+        val moodRow = LinearLayout(ctx).apply {
+            orientation = LinearLayout.HORIZONTAL
+            clipChildren = false
+            clipToPadding = false
+        }
+        moodPresets.forEachIndexed { idx, preset ->
+            val btn = LinearLayout(ctx).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER
+                setPadding(dp(ctx, 6), dp(ctx, 8), dp(ctx, 6), dp(ctx, 8))
+                isFocusable = true
+                isClickable = true
+                background = PanelUiKit.glassCardBg(ctx, lp.accentColor, false)
+                setOnFocusChangeListener { v, f ->
+                    MotionEngine.animateFocus(v, f, lp.motionStyle, 1.04f, 4f)
+                    v.background = PanelUiKit.glassCardBg(ctx, lp.accentColor, f)
+                }
+                setOnClickListener {
+                    lp.tileColor = preset.tileTheme
+                    lp.accentColor = TileThemePalette.getAccentByName(preset.accentKey)
+                    lp.motionStyle = preset.motionKey
+                    lp.prefs.edit().remove(LauncherPreferences.PREF_WALLPAPER).apply()
+                    lp.liveWallpaperMode = preset.sceneKey
+                    onLiveRefresh()
+                    onRefreshPanel()
+                    Toast.makeText(ctx, "${preset.title} Mood Applied", Toast.LENGTH_SHORT).show()
+                }
+                addView(TextView(ctx).apply { text = preset.icon; textSize = 14f; gravity = Gravity.CENTER })
+                addView(TextView(ctx).apply {
+                    text = preset.title
+                    textSize = 9.5f
+                    typeface = Typeface.DEFAULT_BOLD
+                    setTextColor(Color.WHITE)
+                    gravity = Gravity.CENTER
+                })
+            }
+            moodRow.addView(btn, LinearLayout.LayoutParams(0, -2, 1f).apply {
+                if (idx < moodPresets.lastIndex) rightMargin = dp(ctx, 6)
+            })
+        }
+        panel.addView(moodRow, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 6) })
+
+        PanelUiKit.addSectionHeader(ctx, panel, lp, "ACCOUNT & VISIBILITY")
         val topRow = LinearLayout(ctx).apply {
             orientation = LinearLayout.HORIZONTAL
             clipChildren = false
             clipToPadding = false
         }
         topRow.addView(
-            makeActionTile(ctx, lp, "👤 ", lp.userName.ifBlank { "Shree" }, "Edit Profile & DP") {
-                onEditProfile()
-            },
+            makeActionTile(ctx, lp, "👤 ", lp.userName, "Edit Profile & DP") { onEditProfile() },
             LinearLayout.LayoutParams(0, dp(ctx, 52), 1f).apply { rightMargin = dp(ctx, 6) }
         )
 
@@ -75,13 +136,36 @@ object CustomizeMenuBuilder {
         )
         panel.addView(topRow, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 6) })
 
-        addActionCard(ctx, panel, lp, "🖼", "Wallpaper & Live Effects", "Gallery photos, blur, dim & animations") {
-            onOpenWallpaper()
-        }
+        val greetSub = lp.greetingPhrase.ifBlank { "Auto time-based greeting" }
+        panel.addView(
+            PanelUiKit.makeActionRow(ctx, lp, "💬", "Custom Greeting Status", greetSub) {
+                showGreetingDialog(ctx, lp) {
+                    onLiveRefresh()
+                    onRefreshPanel()
+                }
+            },
+            LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 6) }
+        )
 
-        // 1. TILE SIZE (Driven from TileThemePalette.TILE_SIZES)
-        addHeader(ctx, panel, "TILE SIZE")
-        addInPlaceChipRow(
+        panel.addView(
+            PanelUiKit.makeActionRow(ctx, lp, "🖼", "Wallpaper & Live Effects", "Dynamic scenes, blur & gallery photos") {
+                onOpenWallpaper()
+            },
+            LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 4) }
+        )
+        PanelUiKit.addSectionHeader(ctx, panel, lp, "APP NAMEPLATES")
+        PanelUiKit.addSegmentedTrack(
+            ctx, panel, lp,
+            options = listOf("always" to "Always", "focus" to "On Focus", "hidden" to "Hidden"),
+            getSelected = { lp.nameplateMode },
+            onSelect = { key ->
+                lp.nameplateMode = key
+                onLiveRefresh()
+            }
+        )
+
+        PanelUiKit.addSectionHeader(ctx, panel, lp, "TILE SIZE")
+        PanelUiKit.addSegmentedTrack(
             ctx, panel, lp,
             options = TileThemePalette.TILE_SIZES.map { it.key to it.label },
             getSelected = { lp.tileSize },
@@ -91,9 +175,8 @@ object CustomizeMenuBuilder {
             }
         )
 
-        // 2. STAGE & PANEL WIDTH (Driven from TileThemePalette.PANEL_WIDTH_OPTIONS)
-        addHeader(ctx, panel, "STAGE & PANEL WIDTH")
-        addInPlaceChipRow(
+        PanelUiKit.addSectionHeader(ctx, panel, lp, "STAGE & PANEL WIDTH")
+        PanelUiKit.addSegmentedTrack(
             ctx, panel, lp,
             options = TileThemePalette.PANEL_WIDTH_OPTIONS.map { pct -> pct.toString() to "$pct%" },
             getSelected = { lp.panelWidthPct.toString() },
@@ -103,9 +186,8 @@ object CustomizeMenuBuilder {
             }
         )
 
-        // 3. ICON SHAPE (Driven from TileThemePalette.TILE_SHAPES)
-        addHeader(ctx, panel, "ICON SHAPE")
-        addInPlaceChipRow(
+        PanelUiKit.addSectionHeader(ctx, panel, lp, "ICON SHAPE")
+        PanelUiKit.addSegmentedTrack(
             ctx, panel, lp,
             options = TileThemePalette.TILE_SHAPES.map { it.key to it.label },
             getSelected = { lp.tileShape },
@@ -115,8 +197,7 @@ object CustomizeMenuBuilder {
             }
         )
 
-        // 4. GLOBAL MOTION STYLE (Driven from MotionEngine.STYLES)
-        addHeader(ctx, panel, "GLOBAL MOTION STYLE (TAP TO PREVIEW)")
+        PanelUiKit.addSectionHeader(ctx, panel, lp, "GLOBAL MOTION STYLE (TAP TO PREVIEW)")
         val allMotionButtons = ArrayList<Pair<String, TextView>>()
         MotionEngine.STYLES.chunked(4).forEach { rowChunk ->
             val r = LinearLayout(ctx).apply {
@@ -134,15 +215,15 @@ object CustomizeMenuBuilder {
                     gravity = Gravity.CENTER
                     isFocusable = true
                     isClickable = true
-                    background = chipBg(ctx, lp.accentColor, isSel)
+                    background = PanelUiKit.glassCardBg(ctx, lp.accentColor, isSel)
                     setOnFocusChangeListener { v, f ->
-                        MotionEngine.animateFocus(v, f, lp.motionStyle, 1.02f, 2f)
-                        v.background = chipBg(ctx, lp.accentColor, f || lp.motionStyle == spec.key)
+                        MotionEngine.animateFocus(v, f, lp.motionStyle, 1.03f, 3f)
+                        v.background = PanelUiKit.glassCardBg(ctx, lp.accentColor, f || lp.motionStyle == spec.key)
                     }
                     setOnClickListener {
                         lp.motionStyle = spec.key
                         allMotionButtons.forEach { (k, b) ->
-                            b.background = chipBg(ctx, lp.accentColor, b.hasFocus() || k == lp.motionStyle)
+                            b.background = PanelUiKit.glassCardBg(ctx, lp.accentColor, b.hasFocus() || k == lp.motionStyle)
                         }
                         val hostPanel = (panel.parent?.parent as? View) ?: panel
                         MotionEngine.playDemoPreview(hostPanel, spec.key)
@@ -156,8 +237,7 @@ object CustomizeMenuBuilder {
             panel.addView(r, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 5) })
         }
 
-        // 5. ACCENT AURA (Driven from TileThemePalette.ACCENTS)
-        addHeader(ctx, panel, "ACCENT AURA")
+        PanelUiKit.addSectionHeader(ctx, panel, lp, "ACCENT AURA")
         val swatchRow = LinearLayout(ctx).apply {
             orientation = LinearLayout.HORIZONTAL
             clipChildren = false
@@ -191,26 +271,52 @@ object CustomizeMenuBuilder {
         }
         panel.addView(swatchRow, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 6) })
 
-        // 6. TILE GLASS PALETTE (Driven from TileThemePalette.THEMES)
-        addHeader(ctx, panel, "TILE GLASS PALETTE")
-        val themePairs = TileThemePalette.THEMES.map { spec ->
-            spec.key to spec.name.substringBefore(" ")
-        }
-        themePairs.chunked(4).forEach { rowChunk ->
-            addInPlaceChipRow(
-                ctx, panel, lp,
-                options = rowChunk,
-                getSelected = { lp.tileColor },
-                onSelect = { key ->
-                    lp.tileColor = key
-                    onLiveRefresh()
+        PanelUiKit.addSectionHeader(ctx, panel, lp, "TILE GLASS PALETTE")
+        TileThemePalette.THEMES.chunked(2).forEach { rowChunk ->
+            val row = LinearLayout(ctx).apply {
+                orientation = LinearLayout.HORIZONTAL
+                clipChildren = false
+                clipToPadding = false
+            }
+            rowChunk.forEachIndexed { idx, theme ->
+                val isSel = lp.tileColor == theme.key
+                val card = LinearLayout(ctx).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(dp(ctx, 8), dp(ctx, 6), dp(ctx, 8), dp(ctx, 6))
+                    isFocusable = true
+                    isClickable = true
+                    background = PanelUiKit.glassCardBg(ctx, lp.accentColor, isSel)
+                    setOnFocusChangeListener { v, f ->
+                        MotionEngine.animateFocus(v, f, lp.motionStyle, 1.03f, 4f)
+                        v.background = PanelUiKit.glassCardBg(ctx, lp.accentColor, f || lp.tileColor == theme.key)
+                    }
+                    setOnClickListener {
+                        lp.tileColor = theme.key
+                        onLiveRefresh()
+                        onRefreshPanel()
+                    }
+                    addView(
+                        PanelUiKit.createThemeOrbView(ctx, theme.focusedColors, isSel),
+                        LinearLayout.LayoutParams(dp(ctx, 18), dp(ctx, 18)).apply { rightMargin = dp(ctx, 7) }
+                    )
+                    addView(TextView(ctx).apply {
+                        text = theme.name.substringBefore(" ")
+                        textSize = 9.5f
+                        typeface = Typeface.DEFAULT_BOLD
+                        setTextColor(Color.WHITE)
+                        isSingleLine = true
+                    })
                 }
-            )
+                row.addView(card, LinearLayout.LayoutParams(0, dp(ctx, 36), 1f).apply {
+                    if (idx < rowChunk.lastIndex) rightMargin = dp(ctx, 6)
+                })
+            }
+            panel.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 5) })
         }
 
-        // 7. FAVORITE BADGE STYLE (Driven from TileThemePalette.BADGE_MODES)
-        addHeader(ctx, panel, "FAVORITE BADGE")
-        addInPlaceChipRow(
+        PanelUiKit.addSectionHeader(ctx, panel, lp, "FAVORITE BADGE")
+        PanelUiKit.addSegmentedTrack(
             ctx, panel, lp,
             options = TileThemePalette.BADGE_MODES.map { it.key to it.label },
             getSelected = { lp.badgeMode },
@@ -221,48 +327,67 @@ object CustomizeMenuBuilder {
         )
     }
 
-    private fun addInPlaceChipRow(
-        ctx: Context,
-        panel: LinearLayout,
-        lp: LauncherPreferences,
-        options: List<Pair<String, String>>,
-        getSelected: () -> String,
-        onSelect: (String) -> Unit
-    ) {
-        val row = LinearLayout(ctx).apply {
-            orientation = LinearLayout.HORIZONTAL
-            clipChildren = false
-            clipToPadding = false
-        }
-        val chips = ArrayList<Pair<String, TextView>>()
-        options.forEachIndexed { idx, (key, label) ->
-            val isSel = getSelected() == key
-            val chip = TextView(ctx).apply {
-                text = label
-                textSize = 9.5f
-                typeface = Typeface.DEFAULT_BOLD
-                setTextColor(Color.WHITE)
-                gravity = Gravity.CENTER
-                isFocusable = true
-                isClickable = true
-                background = chipBg(ctx, lp.accentColor, isSel)
-                setOnFocusChangeListener { v, f ->
-                    MotionEngine.animateFocus(v, f, lp.motionStyle, 1.05f, 4f)
-                    v.background = chipBg(ctx, lp.accentColor, f || getSelected() == key)
-                }
-                setOnClickListener {
-                    onSelect(key)
-                    chips.forEach { (k, cView) ->
-                        cView.background = chipBg(ctx, lp.accentColor, cView.hasFocus() || getSelected() == k)
-                    }
-                }
+    private fun showGreetingDialog(ctx: Context, lp: LauncherPreferences, onSaved: () -> Unit) {
+        val dialog = Dialog(ctx)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        val box = LinearLayout(ctx).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(ctx, 22), dp(ctx, 18), dp(ctx, 22), dp(ctx, 18))
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(20, 32, 62), Color.rgb(12, 18, 38))
+            ).apply {
+                cornerRadius = LauncherUtils.dpF(ctx, 20f)
+                setStroke(dp(ctx, 1), Color.argb(120, 255, 255, 255))
             }
-            chips.add(key to chip)
-            row.addView(chip, LinearLayout.LayoutParams(0, dp(ctx, 34), 1f).apply {
-                if (idx < options.lastIndex) rightMargin = dp(ctx, 5)
-            })
         }
-        panel.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 4) })
+        box.addView(TextView(ctx).apply {
+            text = "Custom Greeting Phrase"
+            textSize = 15f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(Color.WHITE)
+            setPadding(0, 0, 0, dp(ctx, 10))
+        })
+        val input = EditText(ctx).apply {
+            isSingleLine = true
+            hint = "Leave blank for Auto (e.g. Movie Night)"
+            setText(lp.greetingPhrase)
+            setTextColor(Color.WHITE)
+            setHintTextColor(Color.argb(150, 200, 220, 245))
+            setPadding(dp(ctx, 12), dp(ctx, 10), dp(ctx, 12), dp(ctx, 10))
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_WORDS
+            background = GradientDrawable().apply {
+                setColor(Color.argb(55, 255, 255, 255))
+                cornerRadius = LauncherUtils.dpF(ctx, 12f)
+                setStroke(dp(ctx, 1), lp.accentColor)
+            }
+        }
+        box.addView(input, LinearLayout.LayoutParams(dp(ctx, 310), -2))
+        val btnRow = LinearLayout(ctx).apply { orientation = LinearLayout.HORIZONTAL }
+        btnRow.addView(
+            PanelUiKit.makeActionRow(ctx, lp, "↺", "Auto Reset", "Time-based", "") {
+                lp.greetingPhrase = ""
+                onSaved()
+                dialog.dismiss()
+            },
+            LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = dp(ctx, 8) }
+        )
+        btnRow.addView(
+            PanelUiKit.makeActionRow(ctx, lp, "✓", "Save", "Apply", "") {
+                lp.greetingPhrase = input.text.toString().trim()
+                onSaved()
+                dialog.dismiss()
+            },
+            LinearLayout.LayoutParams(0, -2, 1f)
+        )
+        box.addView(btnRow, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(ctx, 12) })
+        dialog.setContentView(box)
+        dialog.window?.apply {
+            setBackgroundDrawableResource(android.R.color.transparent)
+            clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
+            setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+        }
+        dialog.show()
     }
 
     private fun makeActionTile(ctx: Context, lp: LauncherPreferences, icon: String, title: String, sub: String, onClick: () -> Unit) =
@@ -272,10 +397,10 @@ object CustomizeMenuBuilder {
             setPadding(dp(ctx, 10), dp(ctx, 6), dp(ctx, 10), dp(ctx, 6))
             isFocusable = true
             isClickable = true
-            background = chipBg(ctx, lp.accentColor, false)
+            background = PanelUiKit.glassCardBg(ctx, lp.accentColor, false)
             setOnFocusChangeListener { v, f ->
                 MotionEngine.animateFocus(v, f, lp.motionStyle, 1.03f, 4f)
-                v.background = chipBg(ctx, lp.accentColor, f)
+                v.background = PanelUiKit.glassCardBg(ctx, lp.accentColor, f)
             }
             setOnClickListener { onClick() }
             addView(TextView(ctx).apply {
@@ -292,58 +417,10 @@ object CustomizeMenuBuilder {
                 isSingleLine = true
             })
         }
-
-    private fun addActionCard(ctx: Context, panel: LinearLayout, lp: LauncherPreferences, icon: String, title: String, sub: String, onClick: () -> Unit) {
-        val card = LinearLayout(ctx).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(ctx, 12), dp(ctx, 9), dp(ctx, 12), dp(ctx, 9))
-            isFocusable = true
-            isClickable = true
-            background = chipBg(ctx, lp.accentColor, false)
-            setOnFocusChangeListener { v, f ->
-                MotionEngine.animateFocus(v, f, lp.motionStyle, 1.02f, 4f)
-                v.background = chipBg(ctx, lp.accentColor, f)
-            }
-            setOnClickListener { onClick() }
-        }
-        card.addView(TextView(ctx).apply {
-            text = icon
-            textSize = 14f
-            setTextColor(lp.accentColor)
-            setPadding(0, 0, dp(ctx, 10), 0)
-        })
-        val mid = LinearLayout(ctx).apply { orientation = LinearLayout.VERTICAL }
-        mid.addView(TextView(ctx).apply { text = title; textSize = 10.5f; typeface = Typeface.DEFAULT_BOLD; setTextColor(Color.WHITE) })
-        mid.addView(TextView(ctx).apply { text = sub; textSize = 8.5f; setTextColor(Color.argb(185, 210, 230, 245)) })
-        card.addView(mid, LinearLayout.LayoutParams(0, -2, 1f))
-        card.addView(TextView(ctx).apply { text = "›"; textSize = 15f; typeface = Typeface.DEFAULT_BOLD; setTextColor(Color.WHITE) })
-        panel.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 4) })
-    }
-
-    private fun chipBg(ctx: Context, accent: Int, active: Boolean) = GradientDrawable(
-        GradientDrawable.Orientation.TOP_BOTTOM,
-        if (active) intArrayOf(LauncherUtils.withAlpha(accent, 165), LauncherUtils.withAlpha(accent, 95))
-        else intArrayOf(Color.argb(52, 255, 255, 255), Color.argb(26, 255, 255, 255))
-    ).apply {
-        cornerRadius = LauncherUtils.dpF(ctx, 12f)
-        setStroke(dp(ctx, if (active) 2 else 1), if (active) Color.WHITE else Color.argb(65, 255, 255, 255))
-    }
-
     private fun swatchBg(ctx: Context, col: Int, active: Boolean) = GradientDrawable().apply {
         shape = GradientDrawable.OVAL
         setColor(col)
         setStroke(dp(ctx, if (active) 3 else 1), if (active) Color.WHITE else Color.argb(110, 255, 255, 255))
-    }
-
-    private fun addHeader(ctx: Context, panel: LinearLayout, label: String) {
-        panel.addView(TextView(ctx).apply {
-            text = label.uppercase(Locale.ROOT)
-            textSize = 8.8f
-            typeface = Typeface.DEFAULT_BOLD
-            setTextColor(Color.argb(210, 195, 220, 255))
-            letterSpacing = 0.08f
-        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(ctx, 8); bottomMargin = dp(ctx, 4) })
     }
 
     private fun dp(ctx: Context, v: Int) = LauncherUtils.dp(ctx, v)
