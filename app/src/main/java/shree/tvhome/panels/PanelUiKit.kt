@@ -22,6 +22,7 @@ import android.widget.TextView
 import shree.tvhome.source.LauncherPreferences
 import shree.tvhome.source.LauncherUtils
 import shree.tvhome.source.MotionEngine
+import shree.tvhome.source.TileThemePalette
 import java.util.Locale
 
 object PanelUiKit {
