@@ -1,9 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@drawable/ic_launcher_background" />
-    <item
-        android:width="110dp"
-        android:height="110dp"
-        android:gravity="center"
-        android:drawable="@drawable/ic_launcher_foreground" />
-</layer-list>
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+
+    <!-- Dark teal / emerald banner background -->
+    <path
+        android:fillColor="#0E4D45"
+        android:pathData="M0,0 H320 V180 H0 Z" />
+
+    <!-- Subtle inner teal border -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M14,12 L306,12 A10,10 0 0,1 314,20 L314,160 A10,10 0 0,1 306,168 L14,168 A10,10 0 0,1 6,160 L6,20 A10,10 0 0,1 14,12 Z"
+        android:strokeColor="#278E7E"
+        android:strokeWidth="1.5" />
+
+    <!-- Centered Golden House & 'S' Emblem -->
+    <group
+        android:translateX="106"
+        android:translateY="36">
+        <path
+            android:fillColor="#00000000"
+            android:pathData="M24,52 L54,22 L84,52 L77,52 L77,82 L31,82 L31,52 Z"
+            android:strokeColor="#E5B95C"
+            android:strokeLineJoin="round"
+            android:strokeWidth="3.2" />
+        <path
+            android:fillColor="#00000000"
+            android:pathData="M35,53 L54,34 L73,53 L73,78 L35,78 Z"
+            android:strokeColor="#F4D382"
+            android:strokeLineJoin="round"
+            android:strokeWidth="1.3" />
+        <path
+            android:fillColor="#00000000"
+            android:pathData="M62,46 C62,41 46,41 46,48 C46,54 62,53 62,61 C62,68 45,68 45,62"
+            android:strokeColor="#F5CE6E"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:strokeWidth="4.2" />
+    </group>
+</vector>
