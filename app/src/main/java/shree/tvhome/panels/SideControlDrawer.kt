@@ -164,18 +164,21 @@ class SideControlDrawer(
         setupDrawerSkeleton()
         populateActivePanel()
 
-        if (!wasOpen) {
-            MotionEngine.resetTransform(drawerLayout)
-            MotionEngine.animatePanelEnter(drawerLayout, stageWidget, dynamicDrawerW, lp.motionStyle) {
-                FocusTrap.focusFirstInPanel(activePanel, drawerLayout)
-            }
-        } else {
-            MotionEngine.playDemoPreview(drawerLayout, lp.motionStyle)
-            drawerLayout.post {
-                FocusTrap.focusFirstInPanel(activePanel, drawerLayout)
+        // Mark the first focusable child as default so Android's native focus engine selects it naturally
+        FocusTrap.findFirstFocusable(activePanel ?: drawerLayout)?.let { firstView ->
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                firstView.isFocusedByDefault = true
             }
         }
+
+        if (!wasOpen) {
+            MotionEngine.resetTransform(drawerLayout)
+            MotionEngine.animatePanelEnter(drawerLayout, stageWidget, dynamicDrawerW, lp.motionStyle) {}
+        } else {
+            MotionEngine.playDemoPreview(drawerLayout, lp.motionStyle)
+        }
     }
+
 
     fun close() {
         if (!isOpen) return
