@@ -432,9 +432,21 @@ class AmbientStageWidget(
                     } catch (_: Exception) {}
                 }
 
+                // Dynamically resolve region coordinates from device TimeZone/Locale instead of hardcoded lat/lon
                 if (lat == 0.0 && lon == 0.0) {
-                    lat = 17.6868; lon = 83.2185
-                    if (cityName.isEmpty()) cityName = "Local"
+                    val tzCity = java.util.TimeZone.getDefault().id
+                        .substringAfterLast('/')
+                        .replace('_', ' ')
+                        .takeIf { it.isNotBlank() && it != "GMT" && it != "UTC" }
+                    val fallbackQuery = tzCity ?: Locale.getDefault().displayCountry
+                    if (fallbackQuery.isNotBlank()) {
+                        val resolved = fetchCitySuggestions(fallbackQuery).firstOrNull()
+                        if (resolved != null) {
+                            lat = resolved.lat
+                            lon = resolved.lon
+                            if (cityName.isEmpty()) cityName = resolved.name
+                        }
+                    }
                 }
 
                 val wUrl = "https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&current=temperature_2m,weather_code"
