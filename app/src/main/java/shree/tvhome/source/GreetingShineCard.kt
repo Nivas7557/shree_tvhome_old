@@ -73,12 +73,12 @@ class GreetingShineCard(
 
     fun setAccentColor(accent: Int) {
         accentColor = accent
+        // Borderless glass gradient background without white stroke outline
         background = GradientDrawable(
             GradientDrawable.Orientation.LEFT_RIGHT,
             intArrayOf(LauncherUtils.withAlpha(accentColor, 115), Color.argb(85, 22, 34, 72))
         ).apply {
             cornerRadius = LauncherUtils.dpF(context, 20f)
-            setStroke(dp(1), Color.argb(115, 255, 255, 255))
         }
     }
 
