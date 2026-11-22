@@ -63,7 +63,6 @@ class GlowTileLayout(context: Context) : FrameLayout(context) {
             if (width > 0 && height > 0) updateShaders(width.toFloat(), height.toFloat())
             invalidate()
         } else {
-            // Smoothly dissolve the sunray aura when focus leaves
             val startGlow = glowIntensity.coerceAtLeast(0.45f)
             exitAnimator = ValueAnimator.ofFloat(startGlow, 0f).apply {
                 duration = 340L
@@ -93,10 +92,9 @@ class GlowTileLayout(context: Context) : FrameLayout(context) {
     private fun updateShaders(w: Float, h: Float) {
         if (w <= 0f || h <= 0f) return
 
-    val colors = TileThemePalette.getTopBottomColors(tileKey, tileFocused)
+        val colors = TileThemePalette.getTopBottomColors(tileKey, tileFocused)
         outerCardPaint.shader = LinearGradient(0f, 0f, w * 0.35f, h, colors, null, Shader.TileMode.CLAMP)
 
-        // 3D curved dome gloss reflection across upper 46% of the glass tile
         sheenRect.set(0f, 0f, w, h * 0.46f)
         outerSheenPaint.shader = LinearGradient(
             0f, 0f, 0f, h * 0.46f,
@@ -109,12 +107,11 @@ class GlowTileLayout(context: Context) : FrameLayout(context) {
             Shader.TileMode.CLAMP
         )
 
-        // Inner core bloom inside the glass card
         coreBloomPaint.shader = RadialGradient(
             w / 2f, h * 0.45f, maxOf(w, h) * 0.65f,
             intArrayOf(
-                LauncherUtils.withAlpha(appDominantColor, 160),
-                LauncherUtils.withAlpha(appDominantColor, 55),
+                LauncherUtils.withAlpha(accentColor, 165),
+                LauncherUtils.withAlpha(appDominantColor, 60),
                 Color.TRANSPARENT
             ),
             floatArrayOf(0f, 0.55f, 1f),
@@ -180,12 +177,10 @@ class GlowTileLayout(context: Context) : FrameLayout(context) {
         val cy = h / 2f
         val baseRadius = maxOf(w, h) * 0.56f
 
-        // 1. Borderless Sunray Radial Aura: bright behind icon and dissolves to 0% transparent before adjacent tiles
         if (tileFocused || glowIntensity > 0.01f) {
             val strength = if (tileFocused) (0.60f + 0.40f * glowIntensity) else glowIntensity
             val sunrayRadius = baseRadius * (1.08f + 0.14f * glowIntensity)
 
-            // Use user-selected Accent Aura color as primary focus radiance blended with app color
             sunrayGlowPaint.shader = RadialGradient(
                 cx, cy, sunrayRadius,
                 intArrayOf(
@@ -200,7 +195,6 @@ class GlowTileLayout(context: Context) : FrameLayout(context) {
             canvas.drawCircle(cx, cy, sunrayRadius, sunrayGlowPaint)
         }
 
-        // 2. Borderless frosted glass tile base + glossy top sheen + core bloom
         canvas.drawPath(outerPath, outerCardPaint)
         canvas.save()
         canvas.clipPath(outerPath)
@@ -211,17 +205,16 @@ class GlowTileLayout(context: Context) : FrameLayout(context) {
         }
         canvas.restore()
 
-        // 3. App icon clipped cleanly inside inner shape (no harsh outer border lines)
         canvas.save()
         canvas.clipPath(innerIconPath)
         super.dispatchDraw(canvas)
         canvas.restore()
 
-        // Crisp 3D specular rim bevel around the glass tile & icon edge
         innerRimPaint.strokeWidth = dp(if (tileFocused) 1.6f else 1.1f)
         innerRimPaint.color = if (tileFocused) Color.argb(225, 255, 255, 255) else Color.argb(110, 255, 255, 255)
         canvas.drawPath(outerPath, innerRimPaint)
         canvas.drawPath(innerIconPath, innerRimPaint)
+    }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
