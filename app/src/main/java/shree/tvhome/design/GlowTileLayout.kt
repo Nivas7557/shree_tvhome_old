@@ -180,15 +180,16 @@ class GlowTileLayout(context: Context) : FrameLayout(context) {
             val strength = if (tileFocused) (0.60f + 0.40f * glowIntensity) else glowIntensity
             val sunrayRadius = baseRadius * (1.08f + 0.14f * glowIntensity)
 
+            // Use user-selected Accent Aura color as primary focus radiance blended with app color
             sunrayGlowPaint.shader = RadialGradient(
                 cx, cy, sunrayRadius,
                 intArrayOf(
-                    LauncherUtils.withAlpha(appDominantColor, (205 * strength).toInt()),
-                    LauncherUtils.withAlpha(appDominantColor, (95 * strength).toInt()),
-                    LauncherUtils.withAlpha(appDominantColor, (22 * strength).toInt()),
+                    LauncherUtils.withAlpha(accentColor, (225 * strength).toInt()),
+                    LauncherUtils.withAlpha(appDominantColor, (125 * strength).toInt()),
+                    LauncherUtils.withAlpha(accentColor, (32 * strength).toInt()),
                     Color.TRANSPARENT
                 ),
-                floatArrayOf(0.28f, 0.58f, 0.82f, 1.0f),
+                floatArrayOf(0.25f, 0.56f, 0.82f, 1.0f),
                 Shader.TileMode.CLAMP
             )
             canvas.drawCircle(cx, cy, sunrayRadius, sunrayGlowPaint)
