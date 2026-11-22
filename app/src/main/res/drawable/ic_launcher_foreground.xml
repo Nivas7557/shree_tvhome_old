@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<vector xmlns:android="http://schemas.android.com/apk/res/android">
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- 1. 3D Emboss Drop Shadow Behind House & 'S' -->
+    <!-- 1. 3D Emboss Drop Shadow -->
     <path
-        android:pathData="M55.1,24.8 L84.1,45.8 H77.1 V79.8 H33.1 V45.8 H26.1 Z"
+        android:pathData="M55.1,24.8 L84.1,45.8 L77.1,45.8 L77.1,79.8 L33.1,79.8 L33.1,45.8 L26.1,45.8 Z"
         android:strokeWidth="2.8"
         android:strokeColor="#6603121E"
         android:strokeLineJoin="round" />
@@ -17,7 +17,7 @@
 
     <!-- 2. Clean Creative Outer Golden House Structure -->
     <path
-        android:pathData="M54,23.0 L83.0,44.0 H76.0 V78.0 H32.0 V44.0 H25.0 Z"
+        android:pathData="M54,23.0 L83.0,44.0 L76.0,44.0 L76.0,78.0 L32.0,78.0 L32.0,44.0 L25.0,44.0 Z"
         android:strokeWidth="2.6"
         android:strokeLineJoin="round"
         android:strokeLineCap="round"
@@ -25,7 +25,7 @@
 
     <!-- 3. Inner Creative Parallel Gold Trim -->
     <path
-        android:pathData="M54,28.0 L71.5,40.8 V74.2 H36.5 V40.8 Z"
+        android:pathData="M54,28.0 L71.5,40.8 L71.5,74.2 L36.5,74.2 L36.5,40.8 Z"
         android:strokeWidth="1.25"
         android:strokeLineJoin="round"
         android:strokeColor="#FFFFE796" />
