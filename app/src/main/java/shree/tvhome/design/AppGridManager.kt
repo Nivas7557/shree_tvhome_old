@@ -276,16 +276,18 @@ object AppGridManager {
         }
 
         // Dynamically focus restored package or fallback to the very first available app tile on fresh launch
-        if (shouldRequestFocus && !isDrawerOpen) {
-            val targetView = if (restorePkg != null) {
-                favRow.findViewWithTag<View>("fav_$restorePkg")
-                    ?: fluidGrid.findViewWithTag<View>("all_$restorePkg")
-            } else {
-                favRow.getChildAt(0) ?: fluidGrid.getChildAt(0)
-            }
-            targetView?.post { targetView.requestFocus() }
+        // Mark the first app tile as default-focused so Android TV naturally starts focus in the app drawer
+        val firstAppTile = favRow.getChildAt(0) ?: fluidGrid.getChildAt(0)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            firstAppTile?.isFocusedByDefault = true
         }
-    }
+
+        if (shouldRequestFocus && !isDrawerOpen && restorePkg != null) {
+            val restoreView = favRow.findViewWithTag<View>("fav_$restorePkg")
+                ?: fluidGrid.findViewWithTag<View>("all_$restorePkg")
+            restoreView?.requestFocus()
+        }
+
 
     private fun animateLayoutParams(view: View, w: Int, h: Int, lMargin: Int, rMargin: Int) {
         val p = view.layoutParams as? LinearLayout.LayoutParams ?: return
