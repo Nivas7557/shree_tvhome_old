@@ -233,6 +233,7 @@ class TopNavBar(
         }
 
         syncLiveStatus(refreshProfile = true)
+        lp.addStyleListener { greetingCard.setAccentColor(lp.accentColor) }
     }
 
     private fun buildRamPill(spec: NavActionSpec): View {
