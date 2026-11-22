@@ -93,14 +93,19 @@ class GlowTileLayout(context: Context) : FrameLayout(context) {
     private fun updateShaders(w: Float, h: Float) {
         if (w <= 0f || h <= 0f) return
 
-        val colors = TileThemePalette.getTopBottomColors(tileKey, tileFocused)
-        outerCardPaint.shader = LinearGradient(0f, 0f, 0f, h, colors, null, Shader.TileMode.CLAMP)
+    val colors = TileThemePalette.getTopBottomColors(tileKey, tileFocused)
+        outerCardPaint.shader = LinearGradient(0f, 0f, w * 0.35f, h, colors, null, Shader.TileMode.CLAMP)
 
-        sheenRect.set(0f, 0f, w, h * 0.48f)
+        // 3D curved dome gloss reflection across upper 46% of the glass tile
+        sheenRect.set(0f, 0f, w, h * 0.46f)
         outerSheenPaint.shader = LinearGradient(
-            0f, 0f, 0f, h * 0.48f,
-            Color.argb(if (tileFocused) 125 else 68, 255, 255, 255),
-            Color.argb(0, 255, 255, 255),
+            0f, 0f, 0f, h * 0.46f,
+            intArrayOf(
+                Color.argb(if (tileFocused) 175 else 115, 255, 255, 255),
+                Color.argb(if (tileFocused) 55 else 28, 255, 255, 255),
+                Color.TRANSPARENT
+            ),
+            floatArrayOf(0f, 0.65f, 1f),
             Shader.TileMode.CLAMP
         )
 
@@ -212,11 +217,11 @@ class GlowTileLayout(context: Context) : FrameLayout(context) {
         super.dispatchDraw(canvas)
         canvas.restore()
 
-        // Ultra-subtle inner glass edge highlight only around the app icon
-        innerRimPaint.strokeWidth = dp(0.9f)
-        innerRimPaint.color = if (tileFocused) Color.argb(145, 255, 255, 255) else Color.argb(55, 255, 255, 255)
+        // Crisp 3D specular rim bevel around the glass tile & icon edge
+        innerRimPaint.strokeWidth = dp(if (tileFocused) 1.6f else 1.1f)
+        innerRimPaint.color = if (tileFocused) Color.argb(225, 255, 255, 255) else Color.argb(110, 255, 255, 255)
+        canvas.drawPath(outerPath, innerRimPaint)
         canvas.drawPath(innerIconPath, innerRimPaint)
-    }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
