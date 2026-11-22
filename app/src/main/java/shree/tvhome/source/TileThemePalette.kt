@@ -131,14 +131,45 @@ object TileThemePalette {
 
     fun getTheme(key: String?): ThemeSpec = themeMap[key] ?: THEMES.first()
 
-    fun isLightTheme(themeKey: String?): Boolean = themeKey == "crystal"
+    // Compute relative luminance dynamically from any theme color array without hardcoded theme checks
+    private fun computeAverageLuminance(colors: IntArray): Float {
+        if (colors.isEmpty()) return 0f
+        var sum = 0f
+        for (c in colors) {
+            val r = Color.red(c) / 255f
+            val g = Color.green(c) / 255f
+            val b = Color.blue(c) / 255f
+            sum += (0.2126f * r + 0.7152f * g + 0.0722f * b)
+        }
+        return sum / colors.size
+    }
 
-    // Automatically switches text color to deep navy on Frosted Crystal so fonts remain 100% readable
+    fun isLightSurface(colors: IntArray): Boolean = computeAverageLuminance(colors) > 0.45f
+
+    // Derive optimal high-contrast font color mathematically from the surface's own hue & luminance
+    fun getAdaptiveTextColor(colors: IntArray, secondary: Boolean = false): Int {
+        val sample = colors.firstOrNull() ?: return Color.WHITE
+        val hsv = FloatArray(3)
+        Color.colorToHSV(sample, hsv)
+        val lightBg = isLightSurface(colors)
+        return if (lightBg) {
+            // Deep harmonic shade of the background's own hue for light surfaces
+            hsv[1] = (hsv[1] * 0.85f).coerceIn(0.25f, 0.85f)
+            hsv[2] = if (secondary) 0.32f else 0.14f
+            Color.HSVToColor(if (secondary) 215 else 255, hsv)
+        } else {
+            // Crisp high-luminance harmonic tint of the background's hue for dark/jewel surfaces
+            hsv[1] = (hsv[1] * 0.12f).coerceIn(0f, 0.14f)
+            hsv[2] = if (secondary) 0.88f else 0.99f
+            Color.HSVToColor(if (secondary) 205 else 255, hsv)
+        }
+    }
+
     fun getPrimaryTextColor(themeKey: String?): Int =
-        if (isLightTheme(themeKey)) Color.rgb(14, 26, 58) else Color.WHITE
+        getAdaptiveTextColor(getTheme(themeKey).normalColors, secondary = false)
 
     fun getSecondaryTextColor(themeKey: String?): Int =
-        if (isLightTheme(themeKey)) Color.argb(210, 28, 48, 92) else Color.argb(205, 215, 234, 255)
+        getAdaptiveTextColor(getTheme(themeKey).normalColors, secondary = true)
 
     fun getTopBottomColors(themeKey: String?, focused: Boolean): IntArray {
         val spec = getTheme(themeKey)
