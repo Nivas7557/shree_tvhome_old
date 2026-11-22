@@ -148,12 +148,13 @@ class SideControlDrawer(
         drawerLayout.clipToPadding = true
         drawerLayout.requestLayout()
 
+        // Apply user-selected Glass Palette theme dynamically to the entire Side Drawer
         drawerLayout.background = GradientDrawable(
             GradientDrawable.Orientation.TL_BR,
-            intArrayOf(Color.argb(238, 22, 30, 68), Color.argb(244, 15, 22, 52), Color.argb(248, 10, 15, 38))
+            TileThemePalette.getGlassPanelColors(lp.tileColor, lp.accentColor, elevated = true)
         ).apply {
             cornerRadius = LauncherUtils.dpF(context, 24f)
-            setStroke(dp(1.5f), Color.argb(145, 255, 255, 255))
+            setStroke(dp(1.5f), LauncherUtils.withAlpha(lp.accentColor, 165))
         }
         drawerLayout.outlineProvider = null
 
