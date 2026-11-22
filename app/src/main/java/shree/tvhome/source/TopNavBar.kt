@@ -150,15 +150,19 @@ class TopNavBar(
             clipToPadding = false
         }
 
+        val avatarOverlapOffset = avatarSize / 2
         greetingCard = GreetingShineCard(context, lp.userName, lp.greetingPhrase, lp.accentColor).apply {
-            setPadding(avatarSize - dp(6), dp(7), dp(16), dp(7))
+            // Start text padding right after the circular avatar edge
+            setPadding(avatarOverlapOffset + dp(12), dp(7), dp(16), dp(7))
         }
         profileHeroGroup.addView(
             greetingCard,
             FrameLayout.LayoutParams(-2, dp(40), Gravity.START or Gravity.CENTER_VERTICAL).apply {
-                leftMargin = dp(20)
+                // Tuck flat left edge directly behind the center of the circular avatar
+                leftMargin = avatarOverlapOffset
             }
         )
+
 
         val avatarFrame = FrameLayout(context).apply {
             tag = "nav_profile"
