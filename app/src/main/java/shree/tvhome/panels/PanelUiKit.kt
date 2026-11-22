@@ -174,20 +174,86 @@ object PanelUiKit {
             clipToPadding = false
             background = GradientDrawable(
                 GradientDrawable.Orientation.TOP_BOTTOM,
+    fun addSectionHeader(ctx: Context, parent: LinearLayout, lp: LauncherPreferences, label: String) {
+        val tv = TextView(ctx).apply {
+            text = label.uppercase(Locale.ROOT)
+            textSize = 8.8f
+            typeface = Typeface.DEFAULT_BOLD
+            letterSpacing = 0.09f
+        }
+        val applyColor = {
+            val surfaceColors = TileThemePalette.getTheme(lp.tileColor).normalColors
+            tv.setTextColor(
+                if (TileThemePalette.isLightSurface(surfaceColors)) {
+                    TileThemePalette.getAdaptiveTextColor(surfaceColors, secondary = false)
+                } else {
+                    lp.accentColor
+                }
+            )
+        }
+        applyColor()
+        lp.addStyleListener(applyColor)
+        parent.addView(tv, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(ctx, 10)
+            bottomMargin = dp(ctx, 5)
+        })
+    }
+
+    fun glassCardBg(ctx: Context, accent: Int, active: Boolean, themeKey: String? = null) = GradientDrawable(
+        GradientDrawable.Orientation.TOP_BOTTOM,
+        if (active) {
+            intArrayOf(
+                LauncherUtils.withAlpha(accent, 225),
+                LauncherUtils.withAlpha(accent, 145)
+            )
+        } else {
+            val base = TileThemePalette.getTheme(themeKey).normalColors
+            intArrayOf(
+                LauncherUtils.blendWithAccent(base, accent, 0.14f, 185),
+                LauncherUtils.withAlpha(base, 155)
+            )
+        }
+    ).apply {
+        cornerRadius = LauncherUtils.dpF(ctx, 14f)
+        setStroke(
+            dp(ctx, if (active) 2 else 1),
+            if (active) Color.WHITE else LauncherUtils.withAlpha(accent, 115)
+        )
+    }
+
+    fun addSegmentedTrack(
+        ctx: Context,
+        parent: LinearLayout,
+        lp: LauncherPreferences,
+        options: List<Pair<String, String>>,
+        getSelected: () -> String,
+        onSelect: (String) -> Unit
+    ) {
+        val row = LinearLayout(ctx).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(dp(ctx, 3), dp(ctx, 3), dp(ctx, 3), dp(ctx, 3))
+            clipChildren = false
+            clipToPadding = false
+        }
+
+        val buttons = ArrayList<Pair<String, TextView>>()
+        val refreshChips = {
+            row.background = GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM,
                 intArrayOf(Color.argb(85, 10, 16, 38), Color.argb(55, 22, 34, 72))
             ).apply {
                 cornerRadius = LauncherUtils.dpF(ctx, 14f)
                 setStroke(dp(ctx, 1), LauncherUtils.withAlpha(lp.accentColor, 95))
             }
-        }
-
-        val buttons = ArrayList<Pair<String, TextView>>()
-        fun refreshChips() {
             val current = getSelected()
             val textColor = TileThemePalette.getPrimaryTextColor(lp.tileColor)
+            val activeChipColors = intArrayOf(lp.accentColor)
             buttons.forEach { (k, tv) ->
                 val isSel = k == current
-                tv.setTextColor(if (isSel) Color.WHITE else textColor)
+                tv.setTextColor(
+                    if (isSel || tv.hasFocus()) TileThemePalette.getAdaptiveTextColor(activeChipColors, secondary = false)
+                    else textColor
+                )
                 tv.background = if (isSel || tv.hasFocus()) {
                     GradientDrawable(
                         GradientDrawable.Orientation.LEFT_RIGHT,
@@ -225,21 +291,11 @@ object PanelUiKit {
             })
         }
         refreshChips()
+        lp.addStyleListener(refreshChips)
         parent.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 6) })
-        }
-
-        track.addView(row, FrameLayout.LayoutParams(-1, -2))
-        // Dynamically recalculate thumb width & position whenever panel width changes
-        track.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            val target = itemViews.find { it.first == getSelected() }?.second ?: itemViews.firstOrNull()?.second ?: return@addOnLayoutChangeListener
-            if (target.width > 0 && activeThumb.layoutParams.width != target.width) {
-                activeThumb.layoutParams.width = target.width
-                activeThumb.requestLayout()
-            }
-            activeThumb.x = target.x
-        }
-        parent.addView(track, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 5) })
     }
+        track.addView(row, FrameLayout.LayoutParams(-1, -2))
+                }
 
     // Thick tvOS-style glossy pill progress slider supporting D-Pad Left/Right & Touch
     fun addGlossyPillSlider(
@@ -370,48 +426,60 @@ object PanelUiKit {
         trailingText: String = "›",
         onClick: () -> Unit
     ) = LinearLayout(ctx).apply {
-        val primaryCol = TileThemePalette.getPrimaryTextColor(lp.tileColor)
-        val secondaryCol = TileThemePalette.getSecondaryTextColor(lp.tileColor)
         orientation = LinearLayout.HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
         setPadding(dp(ctx, 12), dp(ctx, 9), dp(ctx, 12), dp(ctx, 9))
         isFocusable = true
         isClickable = true
-        background = glassCardBg(ctx, lp.accentColor, false, lp.tileColor)
-        setOnFocusChangeListener { v, f ->
-            MotionEngine.animateFocus(v, f, lp.motionStyle, 1.02f, 4f)
-            v.background = glassCardBg(ctx, lp.accentColor, f, lp.tileColor)
-        }
-        setOnClickListener { onClick() }
-        addView(TextView(ctx).apply {
+
+        val iconTv = TextView(ctx).apply {
             text = icon
             textSize = 14f
-            setTextColor(lp.accentColor)
             setPadding(0, 0, dp(ctx, 10), 0)
-        })
-        val mid = LinearLayout(ctx).apply { orientation = LinearLayout.VERTICAL }
-        mid.addView(TextView(ctx).apply {
+        }
+        val titleTv = TextView(ctx).apply {
             text = title
             textSize = 10.5f
             typeface = Typeface.DEFAULT_BOLD
-            setTextColor(primaryCol)
             isSingleLine = true
             ellipsize = TextUtils.TruncateAt.END
-        })
-        mid.addView(TextView(ctx).apply {
+        }
+        val subTv = TextView(ctx).apply {
             text = sub
             textSize = 8.5f
-            setTextColor(secondaryCol)
             isSingleLine = true
             ellipsize = TextUtils.TruncateAt.END
-        })
-        addView(mid, LinearLayout.LayoutParams(0, -2, 1f))
-        addView(TextView(ctx).apply {
+        }
+        val trailTv = TextView(ctx).apply {
             text = trailingText
             textSize = 13f
             typeface = Typeface.DEFAULT_BOLD
-            setTextColor(primaryCol)
-        })
+        }
+
+        val syncVisuals = {
+            val primaryCol = TileThemePalette.getPrimaryTextColor(lp.tileColor)
+            val secondaryCol = TileThemePalette.getSecondaryTextColor(lp.tileColor)
+            background = glassCardBg(ctx, lp.accentColor, hasFocus(), lp.tileColor)
+            iconTv.setTextColor(lp.accentColor)
+            titleTv.setTextColor(primaryCol)
+            subTv.setTextColor(secondaryCol)
+            trailTv.setTextColor(primaryCol)
+        }
+        syncVisuals()
+        lp.addStyleListener(syncVisuals)
+
+        setOnFocusChangeListener { v, f ->
+            MotionEngine.animateFocus(v, f, lp.motionStyle, 1.02f, 4f)
+            syncVisuals()
+        }
+        setOnClickListener { onClick() }
+
+        addView(iconTv)
+        val mid = LinearLayout(ctx).apply { orientation = LinearLayout.VERTICAL }
+        mid.addView(titleTv)
+        mid.addView(subTv)
+        addView(mid, LinearLayout.LayoutParams(0, -2, 1f))
+        addView(trailTv)
     }
 
     private fun dp(ctx: Context, v: Int) = LauncherUtils.dp(ctx, v)
