@@ -28,19 +28,28 @@ import java.util.Locale
 object PanelUiKit {
 
     fun addSectionHeader(ctx: Context, parent: LinearLayout, lp: LauncherPreferences, label: String) {
-        parent.addView(
-            TextView(ctx).apply {
-                text = label.uppercase(Locale.ROOT)
-                textSize = 8.8f
-                typeface = Typeface.DEFAULT_BOLD
-                setTextColor(lp.accentColor)
-                letterSpacing = 0.09f
-            },
-            LinearLayout.LayoutParams(-1, -2).apply {
-                topMargin = dp(ctx, 10)
-                bottomMargin = dp(ctx, 5)
-            }
-        )
+        val tv = TextView(ctx).apply {
+            text = label.uppercase(Locale.ROOT)
+            textSize = 8.8f
+            typeface = Typeface.DEFAULT_BOLD
+            letterSpacing = 0.09f
+        }
+        val applyColor = {
+            val surfaceColors = TileThemePalette.getTheme(lp.tileColor).normalColors
+            tv.setTextColor(
+                if (TileThemePalette.isLightSurface(surfaceColors)) {
+                    TileThemePalette.getAdaptiveTextColor(surfaceColors, secondary = false)
+                } else {
+                    lp.accentColor
+                }
+            )
+        }
+        applyColor()
+        lp.addStyleListener(applyColor)
+        parent.addView(tv, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(ctx, 10)
+            bottomMargin = dp(ctx, 5)
+        })
     }
 
     fun glassCardBg(ctx: Context, accent: Int, active: Boolean, themeKey: String? = null) = GradientDrawable(
