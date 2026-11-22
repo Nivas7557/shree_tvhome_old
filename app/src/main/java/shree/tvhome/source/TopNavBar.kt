@@ -150,19 +150,19 @@ class TopNavBar(
             clipToPadding = false
         }
 
-        val avatarOverlapOffset = avatarSize / 2
+        val avatarRadius = avatarSize / 2f
+        val seamGap = LauncherUtils.dpF(context, 4f)
+
         greetingCard = GreetingShineCard(context, lp.userName, lp.greetingPhrase, lp.accentColor).apply {
-            // Start text padding right after the circular avatar edge
-            setPadding(avatarOverlapOffset + dp(12), dp(7), dp(16), dp(7))
+            // Start inner content padding dynamically after the avatar's outer circumference + gap
+            setPadding((avatarRadius + seamGap + dp(10)).toInt(), dp(7), dp(16), dp(7))
         }
         profileHeroGroup.addView(
             greetingCard,
             FrameLayout.LayoutParams(-2, dp(40), Gravity.START or Gravity.CENTER_VERTICAL).apply {
-                // Tuck flat left edge directly behind the center of the circular avatar
-                leftMargin = avatarOverlapOffset
+                leftMargin = avatarRadius.toInt()
             }
         )
-
 
         val avatarFrame = FrameLayout(context).apply {
             tag = "nav_profile"
@@ -201,6 +201,14 @@ class TopNavBar(
             avatarFrame,
             FrameLayout.LayoutParams(avatarSize, avatarSize, Gravity.START or Gravity.CENTER_VERTICAL)
         )
+
+        // Compute exact avatar center relative to greetingCard after layout so the cutout matches dynamically
+        profileHeroGroup.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            val relCenterX = (avatarFrame.left + avatarFrame.width / 2f) - greetingCard.left
+            val relCenterY = (avatarFrame.top + avatarFrame.height / 2f) - greetingCard.top
+            val cutoutR = (avatarFrame.width / 2f) + seamGap
+            greetingCard.setAvatarCutout(relCenterX, relCenterY, cutoutR)
+        }
 
         nudgeOverlayBubble = TextView(context).apply {
             textSize = 10.5f
