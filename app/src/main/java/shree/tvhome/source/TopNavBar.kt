@@ -102,8 +102,11 @@ class TopNavBar(
         clipToPadding = false
         setPadding(0, 0, 0, 0)
 
-        val barHeight = dp(38)
-        val avatarSize = dp(88)
+        // Derive bar height and avatar size dynamically from screen height
+        val screenH = context.resources.displayMetrics.heightPixels
+        val barHeight = maxOf(dp(36), (screenH * 0.052f).toInt())
+        val avatarSize = (barHeight * 2.25f).toInt()
+
 
         val rightControls = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
