@@ -4,7 +4,22 @@ import android.content.Context
 import android.content.SharedPreferences
 
 class LauncherPreferences(context: Context) {
+    
+    private val styleListeners = java.util.concurrent.CopyOnWriteArrayList<() -> Unit>()
 
+    // Register lightweight listeners so existing views repaint colors naturally without recreating layouts
+    fun addStyleListener(listener: () -> Unit) {
+        if (!styleListeners.contains(listener)) styleListeners.add(listener)
+    }
+
+    fun removeStyleListener(listener: () -> Unit) {
+        styleListeners.remove(listener)
+    }
+
+    private fun notifyStyleChanged() {
+        for (listener in styleListeners) listener()
+    }
+        
     companion object {
         const val PREFS = "launcher_preferences"
         const val PREF_ACCENT = "accent_color"
@@ -52,20 +67,26 @@ class LauncherPreferences(context: Context) {
         const val PREF_PICTURE_MODE = "picture_mode"
         const val PREF_CUSTOM_BRIGHTNESS = "custom_brightness_pct"
         const val PREF_CUSTOM_WARMTH = "custom_warmth_pct"
-        
+
+        // New Dynamic Upgrade Keys
+        const val PREF_NAMEPLATE_MODE = "nameplate_mode"
+        const val PREF_DND_ENABLED = "dnd_enabled"
+        const val PREF_SLEEP_TIMER_END_MS = "sleep_timer_end_ms"
     }
 
     val prefs: SharedPreferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
     var accentColor: Int
         get() = prefs.getInt(PREF_ACCENT, TileThemePalette.ACCENTS.first().color)
-        set(value) = prefs.edit().putInt(PREF_ACCENT, value).apply()
+        set(value) {
+            prefs.edit().putInt(PREF_ACCENT, value).apply()
+            notifyStyleChanged()
+        }
 
     var accentName: String
-        get() = prefs.getString(PREF_ACCENT_NAME, TileThemePalette.ACCENTS.first().label)
-            ?: TileThemePalette.ACCENTS.first().label
+        get() = prefs.getString(PREF_ACCENT_NAME, TileThemePalette.ACCENTS.first().label) ?: TileThemePalette.ACCENTS.first().label
         set(value) = prefs.edit().putString(PREF_ACCENT_NAME, value).apply()
-
+        
     var tileSize: String
         get() = prefs.getString(PREF_TILE_SIZE, TileThemePalette.getTileSizeSpec("medium").key)
             ?: TileThemePalette.getTileSizeSpec("medium").key
@@ -77,9 +98,11 @@ class LauncherPreferences(context: Context) {
         set(value) = prefs.edit().putString(PREF_TILE_SHAPE, value).apply()
 
     var tileColor: String
-        get() = prefs.getString(PREF_TILE_COLOR, TileThemePalette.THEMES.first().key)
-            ?: TileThemePalette.THEMES.first().key
-        set(value) = prefs.edit().putString(PREF_TILE_COLOR, value).apply()
+        get() = prefs.getString(PREF_TILE_COLOR, TileThemePalette.THEMES.first().key) ?: TileThemePalette.THEMES.first().key
+        set(value) {
+            prefs.edit().putString(PREF_TILE_COLOR, value).apply()
+            notifyStyleChanged()
+        }
 
     var badgeMode: String
         get() = prefs.getString(PREF_BADGE, TileThemePalette.BADGE_MODES.first().key)
@@ -193,6 +216,19 @@ class LauncherPreferences(context: Context) {
     var customWarmthPct: Int
         get() = prefs.getInt(PREF_CUSTOM_WARMTH, 0).coerceIn(0, 75)
         set(value) = prefs.edit().putInt(PREF_CUSTOM_WARMTH, value.coerceIn(0, 75)).apply()
+
+    // Nameplate modes: "always", "focus", "hidden"
+    var nameplateMode: String
+        get() = prefs.getString(PREF_NAMEPLATE_MODE, "always") ?: "always"
+        set(value) = prefs.edit().putString(PREF_NAMEPLATE_MODE, value).apply()
+
+    var dndEnabled: Boolean
+        get() = prefs.getBoolean(PREF_DND_ENABLED, false)
+        set(value) = prefs.edit().putBoolean(PREF_DND_ENABLED, value).apply()
+
+    var sleepTimerEndMs: Long
+        get() = prefs.getLong(PREF_SLEEP_TIMER_END_MS, 0L)
+        set(value) = prefs.edit().putLong(PREF_SLEEP_TIMER_END_MS, value).apply()
 
     fun getOrderedFavorites(): MutableList<String> {
         val raw = prefs.getString(PREF_FAVORITES_ORDER, null)

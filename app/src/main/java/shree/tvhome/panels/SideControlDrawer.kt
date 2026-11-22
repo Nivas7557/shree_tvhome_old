@@ -108,6 +108,21 @@ class SideControlDrawer(
     private var activePanel: LinearLayout? = null
     private var stageWidget: View? = null
 
+    init {
+        // Repaint drawer shell naturally whenever Accent or Glass Palette changes
+        lp.addStyleListener {
+            if (isOpen) {
+                drawerLayout.background = GradientDrawable(
+                    GradientDrawable.Orientation.TL_BR,
+                    TileThemePalette.getGlassPanelColors(lp.tileColor, lp.accentColor, elevated = true)
+                ).apply {
+                    cornerRadius = LauncherUtils.dpF(context, 24f)
+                    setStroke(dp(1.5f), LauncherUtils.withAlpha(lp.accentColor, 185))
+                }
+            }
+        }
+    }
+
     fun attachStageWidget(widget: View) {
         stageWidget = widget
     }
@@ -148,12 +163,13 @@ class SideControlDrawer(
         drawerLayout.clipToPadding = true
         drawerLayout.requestLayout()
 
+        // Apply user-selected Glass Palette theme dynamically to the entire Side Drawer
         drawerLayout.background = GradientDrawable(
             GradientDrawable.Orientation.TL_BR,
-            intArrayOf(Color.argb(238, 22, 30, 68), Color.argb(244, 15, 22, 52), Color.argb(248, 10, 15, 38))
+            TileThemePalette.getGlassPanelColors(lp.tileColor, lp.accentColor, elevated = true)
         ).apply {
             cornerRadius = LauncherUtils.dpF(context, 24f)
-            setStroke(dp(1.5f), Color.argb(145, 255, 255, 255))
+            setStroke(dp(1.5f), LauncherUtils.withAlpha(lp.accentColor, 165))
         }
         drawerLayout.outlineProvider = null
 
@@ -210,7 +226,28 @@ class SideControlDrawer(
         }
 
         val headerSpec = drawerHeaders.find { it.mode == currentMode } ?: drawerHeaders.first()
-        topRow.addView(text("${headerSpec.icon}${headerSpec.title}", 13.5f, Color.WHITE, true))
+        val isSubPanel = currentMode.startsWith("sub_") || currentMode == MODE_WALLPAPER_EDIT
+        if (isSubPanel) {
+            val parentMode = if (currentMode == MODE_WALLPAPER_EDIT) MODE_CUSTOMIZE else MODE_QUICK
+            val parentLabel = if (currentMode == MODE_WALLPAPER_EDIT) "Customize" else "Quick Settings"
+            val backCrumb = TextView(context).apply {
+                text = "‹ $parentLabel"
+                textSize = 11f
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(lp.accentColor)
+                isFocusable = true
+                isClickable = true
+                setPadding(dp(6f), dp(3f), dp(8f), dp(3f))
+                background = glassCardBg(false)
+                setOnFocusChangeListener { v, f ->
+                    MotionEngine.animateFocus(v, f, lp.motionStyle, 1.04f, 3f)
+                    v.background = glassCardBg(f)
+                }
+                setOnClickListener { open(parentMode) }
+            }
+            topRow.addView(backCrumb, LinearLayout.LayoutParams(-2, -2).apply { rightMargin = dp(8f) })
+        }
+        topRow.addView(text("${headerSpec.icon}${headerSpec.title}", 13f, Color.WHITE, true))
         topRow.addView(View(context), LinearLayout.LayoutParams(0, 1, 1f))
 
         val closeX = TextView(context).apply {
@@ -268,6 +305,19 @@ class SideControlDrawer(
             }
             return
         }
+        val dndState = lp.dndEnabled
+        val dndRow = PanelUiKit.makeActionRow(
+            context, lp,
+            if (dndState) "🔕" else "🔔",
+            if (dndState) "Do Not Disturb: ON" else "Do Not Disturb: OFF",
+            if (dndState) "Night nudges & alert popups muted" else "Tap to mute night nudges",
+            if (dndState) "ON" else "OFF"
+        ) {
+            lp.dndEnabled = !lp.dndEnabled
+            populateActivePanel()
+        }
+        panel.addView(dndRow, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8f) })
+
         val alerts = TvNotificationService.getAlerts()
         val topBar = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         val headerCountTv = text("LIVE SYSTEM ALERTS (${alerts.size})", 9f, lp.accentColor, true)
@@ -314,6 +364,12 @@ class SideControlDrawer(
                     v.background = glassCardBg(f)
                 }
                 setOnClickListener { v ->
+                    // Launch source app if available, then dismiss alert
+                    item.packageName?.let { pkg ->
+                        try {
+                            context.packageManager.getLaunchIntentForPackage(pkg)?.let { context.startActivity(it) }
+                        } catch (_: Exception) {}
+                    }
                     TvNotificationService.dismissAlert(item.key)
                     listHolder.removeView(v)
                     val rem = TvNotificationService.getAlerts().size
@@ -328,7 +384,7 @@ class SideControlDrawer(
             }
             val row1 = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
             row1.addView(text("🔔  ${item.appName}", 9f, lp.accentColor, true), LinearLayout.LayoutParams(0, -2, 1f))
-            row1.addView(text("${item.timeStr}  ✕", 8.5f, Color.argb(180, 255, 255, 255), true))
+            row1.addView(text("${item.timeStr}  ›", 8.5f, Color.argb(180, 255, 255, 255), true))
             card.addView(row1)
             card.addView(text(item.title, 10.5f, Color.WHITE, true).apply {
                 isSingleLine = true
@@ -344,11 +400,15 @@ class SideControlDrawer(
     }
     private fun buildPowerPanel(panel: LinearLayout) {
         addLabel(panel, "DEVICE POWER & LAUNCHER")
-        addActionButton(panel, "🌙", "Sleep / Lock Display", "Turn off screen / enter standby") {
+        addActionButton(panel, "🕰️", "Ambient Clock Screensaver", "Enter full-screen clock & weather view") {
+            close()
+            context.sendBroadcast(Intent("shree.tvhome.ACTION_ENTER_AMBIENT").setPackage(context.packageName))
+        }
+        addActionButton(panel, "🌙", "Sleep / Home Standby", "Return to system standby") {
             try { context.startActivity(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)) } catch (_: Exception) {}
             close()
         }
-        addActionButton(panel, "🔄", "Refresh All Apps", "Reload app icons and grid") {
+        addActionButton(panel, "🔄", "Soft Restart Launcher", "Reload all apps, icons & visual shaders") {
             AppGridManager.clearCache()
             onLiveRefresh()
             close()

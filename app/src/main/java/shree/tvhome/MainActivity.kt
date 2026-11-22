@@ -107,6 +107,18 @@ class MainActivity : Activity() {
         } else {
             registerReceiver(pkgReceiver, filter)
         }
+
+        val ambientFilter = IntentFilter("shree.tvhome.ACTION_ENTER_AMBIENT")
+        val ambientReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                toggleAmbientScreensaver(true)
+            }
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(ambientReceiver, ambientFilter, RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(ambientReceiver, ambientFilter)
+        }
     }
 
     override fun onDestroy() {
@@ -136,7 +148,31 @@ class MainActivity : Activity() {
         }
     }
 
+    private var isAmbientScreensaverActive = false
+
+    private fun toggleAmbientScreensaver(enable: Boolean) {
+        if (isAmbientScreensaverActive == enable) return
+        isAmbientScreensaverActive = enable
+        if (enable) {
+            if (::sideDrawer.isInitialized && sideDrawer.isOpen) sideDrawer.close()
+            topNavBar.animate().alpha(0f).setDuration(350L).start()
+            mainBody.animate().alpha(0f).setDuration(350L).withEndAction {
+                mainBody.visibility = View.INVISIBLE
+            }.start()
+            ambientStage.animate().scaleX(1.22f).scaleY(1.22f).translationX(-dp(80).toFloat()).setDuration(450L).start()
+        } else {
+            mainBody.visibility = View.VISIBLE
+            topNavBar.animate().alpha(1f).setDuration(300L).start()
+            mainBody.animate().alpha(1f).setDuration(300L).start()
+            ambientStage.animate().scaleX(1f).scaleY(1f).translationX(0f).setDuration(350L).start()
+        }
+    }
+
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (isAmbientScreensaverActive && event.action == KeyEvent.ACTION_DOWN) {
+            toggleAmbientScreensaver(false)
+            return true
+        }
         if (::sideDrawer.isInitialized && sideDrawer.isOpen &&
             FocusTrap.handleKeyEvent(
                 event = event,

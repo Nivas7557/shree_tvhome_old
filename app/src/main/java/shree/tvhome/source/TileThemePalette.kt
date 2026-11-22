@@ -37,58 +37,58 @@ object TileThemePalette {
         ThemeSpec(
             key = "frost",
             name = "Royal Indigo",
-            subtitle = "Glossy & Deep",
-            normalColors = intArrayOf(Color.argb(145, 26, 40, 82), Color.argb(100, 16, 26, 56), Color.argb(130, 38, 56, 108)),
-            focusedColors = intArrayOf(Color.argb(210, 58, 92, 168), Color.argb(155, 32, 54, 112), Color.argb(195, 78, 118, 205))
+            subtitle = "Deep Sapphire Glass",
+            normalColors = intArrayOf(Color.argb(215, 28, 52, 118), Color.argb(195, 14, 28, 72), Color.argb(210, 44, 76, 158)),
+            focusedColors = intArrayOf(Color.argb(245, 58, 108, 215), Color.argb(230, 28, 62, 145), Color.argb(245, 88, 145, 255))
         ),
         ThemeSpec(
             key = "ocean",
             name = "Ocean Breeze",
-            subtitle = "Cyan & Deep Sea",
-            normalColors = intArrayOf(Color.argb(150, 12, 58, 120), Color.argb(110, 6, 36, 82), Color.argb(135, 16, 86, 155)),
-            focusedColors = intArrayOf(Color.argb(215, 22, 115, 215), Color.argb(165, 10, 65, 145), Color.argb(200, 32, 155, 245))
+            subtitle = "Electric Cyan & Sea",
+            normalColors = intArrayOf(Color.argb(215, 10, 92, 165), Color.argb(195, 6, 48, 105), Color.argb(210, 18, 132, 205)),
+            focusedColors = intArrayOf(Color.argb(245, 22, 155, 245), Color.argb(230, 10, 88, 178), Color.argb(245, 48, 195, 255))
         ),
         ThemeSpec(
             key = "cyber",
             name = "Cyber Neon",
-            subtitle = "Electric & Cyber",
-            normalColors = intArrayOf(Color.argb(155, 58, 22, 115), Color.argb(115, 32, 12, 72), Color.argb(145, 88, 28, 155)),
-            focusedColors = intArrayOf(Color.argb(220, 135, 52, 235), Color.argb(175, 78, 24, 165), Color.argb(215, 185, 72, 255))
+            subtitle = "Violet & Magenta Glow",
+            normalColors = intArrayOf(Color.argb(215, 88, 24, 158), Color.argb(195, 42, 14, 96), Color.argb(210, 148, 32, 178)),
+            focusedColors = intArrayOf(Color.argb(245, 155, 52, 245), Color.argb(230, 82, 24, 168), Color.argb(245, 225, 65, 215))
         ),
         ThemeSpec(
             key = "sunset",
             name = "Sunset Glow",
             subtitle = "Crimson & Amber",
-            normalColors = intArrayOf(Color.argb(155, 120, 32, 68), Color.argb(115, 78, 18, 46), Color.argb(145, 155, 48, 72)),
-            focusedColors = intArrayOf(Color.argb(225, 225, 78, 108), Color.argb(175, 155, 38, 75), Color.argb(215, 255, 115, 92))
+            normalColors = intArrayOf(Color.argb(215, 155, 34, 82), Color.argb(195, 92, 18, 54), Color.argb(210, 198, 62, 78)),
+            focusedColors = intArrayOf(Color.argb(245, 235, 68, 108), Color.argb(230, 165, 34, 78), Color.argb(245, 255, 128, 72))
         ),
         ThemeSpec(
             key = "emerald",
             name = "Emerald Forest",
-            subtitle = "Deep Jungle & Mint",
-            normalColors = intArrayOf(Color.argb(150, 14, 78, 62), Color.argb(110, 8, 48, 38), Color.argb(135, 22, 105, 82)),
-            focusedColors = intArrayOf(Color.argb(220, 26, 158, 120), Color.argb(175, 14, 105, 78), Color.argb(215, 48, 205, 155))
+            subtitle = "Deep Jade & Mint",
+            normalColors = intArrayOf(Color.argb(215, 14, 118, 88), Color.argb(195, 8, 66, 52), Color.argb(210, 22, 148, 112)),
+            focusedColors = intArrayOf(Color.argb(245, 24, 185, 138), Color.argb(230, 12, 115, 86), Color.argb(245, 52, 225, 175))
         ),
         ThemeSpec(
             key = "dark",
             name = "Slate Dark",
-            subtitle = "Graphite & Matte",
-            normalColors = intArrayOf(Color.argb(180, 18, 22, 34), Color.argb(160, 10, 14, 22), Color.argb(175, 26, 30, 44)),
-            focusedColors = intArrayOf(Color.argb(230, 38, 46, 68), Color.argb(200, 22, 28, 44), Color.argb(225, 52, 62, 92))
+            subtitle = "Obsidian Graphite",
+            normalColors = intArrayOf(Color.argb(225, 26, 32, 48), Color.argb(215, 14, 18, 28), Color.argb(225, 38, 46, 68)),
+            focusedColors = intArrayOf(Color.argb(245, 52, 64, 92), Color.argb(235, 28, 36, 54), Color.argb(245, 74, 88, 125))
         ),
         ThemeSpec(
             key = "crystal",
             name = "Frosted Crystal",
-            subtitle = "Vision Pure Glass",
-            normalColors = intArrayOf(Color.argb(95, 235, 245, 255), Color.argb(55, 185, 215, 250), Color.argb(85, 220, 240, 255)),
-            focusedColors = intArrayOf(Color.argb(155, 255, 255, 255), Color.argb(105, 210, 235, 255), Color.argb(145, 240, 250, 255))
+            subtitle = "Bright Ice Glass",
+            normalColors = intArrayOf(Color.argb(215, 215, 232, 252), Color.argb(195, 182, 208, 242), Color.argb(210, 228, 242, 255)),
+            focusedColors = intArrayOf(Color.argb(245, 240, 248, 255), Color.argb(230, 205, 228, 255), Color.argb(245, 255, 255, 255))
         ),
         ThemeSpec(
             key = "obsidian",
             name = "Golden Obsidian",
-            subtitle = "Luxury Black & Gold",
-            normalColors = intArrayOf(Color.argb(195, 18, 16, 14), Color.argb(175, 10, 10, 12), Color.argb(190, 34, 28, 18)),
-            focusedColors = intArrayOf(Color.argb(235, 68, 54, 26), Color.argb(210, 28, 24, 18), Color.argb(230, 115, 88, 36))
+            subtitle = "Royal Black & Gold",
+            normalColors = intArrayOf(Color.argb(225, 34, 28, 18), Color.argb(215, 16, 14, 12), Color.argb(225, 58, 46, 24)),
+            focusedColors = intArrayOf(Color.argb(245, 96, 76, 34), Color.argb(235, 42, 34, 20), Color.argb(245, 148, 115, 44))
         )
     )
 
@@ -122,7 +122,7 @@ object TileThemePalette {
     )
 
     val PANEL_WIDTH_OPTIONS = listOf(20, 25, 30, 35)
-    const val PANEL_MIN_WIDTH_DP = 250
+    const val PANEL_MIN_WIDTH_DP = 165
     val GRID_COL_RANGE = 3..8
 
     private val themeMap by lazy { THEMES.associateBy { it.key } }
@@ -131,9 +131,60 @@ object TileThemePalette {
 
     fun getTheme(key: String?): ThemeSpec = themeMap[key] ?: THEMES.first()
 
+    // Compute relative luminance dynamically from any theme color array without hardcoded theme checks
+    private fun computeAverageLuminance(colors: IntArray): Float {
+        if (colors.isEmpty()) return 0f
+        var sum = 0f
+        for (c in colors) {
+            val r = Color.red(c) / 255f
+            val g = Color.green(c) / 255f
+            val b = Color.blue(c) / 255f
+            sum += (0.2126f * r + 0.7152f * g + 0.0722f * b)
+        }
+        return sum / colors.size
+    }
+
+    fun isLightSurface(colors: IntArray): Boolean = computeAverageLuminance(colors) > 0.45f
+
+    // Derive optimal high-contrast font color mathematically from the surface's own hue & luminance
+    fun getAdaptiveTextColor(colors: IntArray, secondary: Boolean = false): Int {
+        val sample = colors.firstOrNull() ?: return Color.WHITE
+        val hsv = FloatArray(3)
+        Color.colorToHSV(sample, hsv)
+        val lightBg = isLightSurface(colors)
+        return if (lightBg) {
+            // Deep harmonic shade of the background's own hue for light surfaces
+            hsv[1] = (hsv[1] * 0.85f).coerceIn(0.25f, 0.85f)
+            hsv[2] = if (secondary) 0.32f else 0.14f
+            Color.HSVToColor(if (secondary) 215 else 255, hsv)
+        } else {
+            // Crisp high-luminance harmonic tint of the background's hue for dark/jewel surfaces
+            hsv[1] = (hsv[1] * 0.12f).coerceIn(0f, 0.14f)
+            hsv[2] = if (secondary) 0.88f else 0.99f
+            Color.HSVToColor(if (secondary) 205 else 255, hsv)
+        }
+    }
+
+    fun getPrimaryTextColor(themeKey: String?): Int =
+        getAdaptiveTextColor(getTheme(themeKey).normalColors, secondary = false)
+
+    fun getSecondaryTextColor(themeKey: String?): Int =
+        getAdaptiveTextColor(getTheme(themeKey).normalColors, secondary = true)
+
     fun getTopBottomColors(themeKey: String?, focused: Boolean): IntArray {
         val spec = getTheme(themeKey)
         return if (focused) spec.focusedColors else spec.normalColors
+    }
+
+    fun getGlassPanelColors(themeKey: String?, accentColor: Int, elevated: Boolean = false): IntArray {
+        val base = getTheme(themeKey).normalColors
+        val topCol = base.firstOrNull() ?: Color.rgb(22, 34, 72)
+        val botCol = base.lastOrNull() ?: topCol
+        val alphaBoost = if (elevated) 242 else 220
+        val c1 = LauncherUtils.withAlpha(topCol, alphaBoost)
+        val c2 = LauncherUtils.withAlpha(botCol, (alphaBoost + 8).coerceAtMost(252))
+        val c3 = LauncherUtils.blendWithAccent(botCol, accentColor, if (elevated) 0.22f else 0.14f, alphaBoost)
+        return intArrayOf(c1, c2, c3)
     }
 
     fun getTileSizeSpec(key: String?): TileSizeSpec = sizeMap[key] ?: sizeMap["medium"] ?: TILE_SIZES.first()
