@@ -87,6 +87,13 @@ class MainActivity : Activity() {
         )
 
         buildScreen()
+        if (lp.pictureMode == "Custom") {
+            shree.tvhome.panels.SystemSubPanels.applyWarmTintOverlay(this, lp.customWarmthPct)
+        } else {
+            val preset = shree.tvhome.panels.SystemSubPanels.PICTURE_MODES.find { it.key == lp.pictureMode }
+            if (preset != null) shree.tvhome.panels.SystemSubPanels.applyWarmTintOverlay(this, preset.warmth)
+        }
+        
         NightNudgeReceiver.scheduleNextNudge(this)
 
         val filter = IntentFilter().apply {

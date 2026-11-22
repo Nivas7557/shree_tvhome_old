@@ -161,7 +161,7 @@ class SideControlDrawer(
         }
 
         val headerSpec = drawerHeaders.find { it.mode == currentMode }
-            ?: DrawerHeaderSpec(MODE_QUICK, "⚡  ", "Control Center", "nav_quick")
+            ?: DrawerHeaderSpec(MODE_QUICK, "⚙  ", "Quick Settings", "nav_quick")
         topRow.addView(text("${headerSpec.icon}${headerSpec.title}", 13.5f, Color.WHITE, true))
         topRow.addView(View(context), LinearLayout.LayoutParams(0, 1, 1f))
 
@@ -208,16 +208,13 @@ class SideControlDrawer(
                 onOpenHiddenRibbon,
                 ::close
             )
-            MODE_WIFI -> WifiPanelBuilder.build(context, panel, lp) { populateActivePanel() }
-            MODE_ALERTS -> buildRealAlertsPanel(panel)
-            MODE_POWER -> buildPowerPanel(panel)
             MODE_WALLPAPER_EDIT -> WallpaperEditorPanel.build(context, panel, lp, onWallpaperRefresh, onPickWallpaper) { open(MODE_CUSTOMIZE) }
-            MODE_SUB_INPUTS -> buildInputsSubPanel(panel)
-            MODE_SUB_PICTURE -> buildPictureSubPanel(panel)
-            MODE_SUB_SOUND -> buildSoundSubPanel(panel)
+            MODE_SUB_INPUTS -> SystemSubPanels.buildInputsSubPanel(context, panel, lp) { open(MODE_QUICK) }
+            MODE_SUB_PICTURE -> SystemSubPanels.buildPictureAndDisplayPanel(context, panel, lp) { open(MODE_QUICK) }
+            MODE_SUB_SOUND -> SystemSubPanels.buildSoundSubPanel(context, panel, lp) { open(MODE_QUICK) }
             MODE_SUB_BLUETOOTH -> SystemSubPanels.buildBluetoothPanel(context, panel, lp) { open(MODE_QUICK) }
             MODE_SUB_STORAGE -> SystemSubPanels.buildStorageAndAppsPanel(context, panel, lp) { open(MODE_QUICK) }
-            else -> buildControlCenter(panel)
+            else -> SystemSubPanels.buildQuickSettingsMain(context, panel, lp) { targetMode -> open(targetMode) }
         }
     }
 
@@ -357,7 +354,7 @@ class SideControlDrawer(
             presetCards.add(card to titleTv)
             panel.addView(card, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(6f) })
         }
-        SystemSubPanels.buildDisplayTimeoutAndNightPanel(context, panel, lp) { open(MODE_QUICK) }
+        SystemSubPanels.buildPictureAndDisplayPanel(context, panel, lp) { open(MODE_QUICK) }
     }
 
     private fun buildSoundSubPanel(panel: LinearLayout) {
