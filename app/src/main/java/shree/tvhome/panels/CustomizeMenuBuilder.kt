@@ -266,7 +266,6 @@ object CustomizeMenuBuilder {
             })
         }
         panel.addView(swatchRow, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 6) })
-
         PanelUiKit.addSectionHeader(ctx, panel, lp, "TILE GLASS PALETTE")
         TileThemePalette.THEMES.chunked(2).forEach { rowChunk ->
             val row = LinearLayout(ctx).apply {
@@ -276,32 +275,42 @@ object CustomizeMenuBuilder {
             }
             rowChunk.forEachIndexed { idx, theme ->
                 val isSel = lp.tileColor == theme.key
+                val labelTv = TextView(ctx).apply {
+                    text = theme.name.substringBefore(" ")
+                    textSize = 9.5f
+                    typeface = Typeface.DEFAULT_BOLD
+                    isSingleLine = true
+                }
                 val card = LinearLayout(ctx).apply {
                     orientation = LinearLayout.HORIZONTAL
                     gravity = Gravity.CENTER_VERTICAL
                     setPadding(dp(ctx, 8), dp(ctx, 6), dp(ctx, 8), dp(ctx, 6))
                     isFocusable = true
                     isClickable = true
-                    background = PanelUiKit.glassCardBg(ctx, lp.accentColor, isSel)
+
+                    val syncCard = {
+                        val selNow = lp.tileColor == theme.key
+                        background = PanelUiKit.glassCardBg(ctx, lp.accentColor, hasFocus() || selNow, lp.tileColor)
+                        labelTv.setTextColor(
+                            if (hasFocus() || selNow) TileThemePalette.getAdaptiveTextColor(intArrayOf(lp.accentColor))
+                            else TileThemePalette.getPrimaryTextColor(lp.tileColor)
+                        )
+                    }
+                    syncCard()
+                    lp.addStyleListener(syncCard)
+
                     setOnFocusChangeListener { v, f ->
                         MotionEngine.animateFocus(v, f, lp.motionStyle, 1.03f, 4f)
-                        v.background = PanelUiKit.glassCardBg(ctx, lp.accentColor, f || lp.tileColor == theme.key)
+                        syncCard()
                     }
                     setOnClickListener {
-                        // Natural property update without rebuilding panel or grid views
                         lp.tileColor = theme.key
                     }
                     addView(
                         PanelUiKit.createThemeOrbView(ctx, theme.focusedColors, isSel),
                         LinearLayout.LayoutParams(dp(ctx, 18), dp(ctx, 18)).apply { rightMargin = dp(ctx, 7) }
                     )
-                    addView(TextView(ctx).apply {
-                        text = theme.name.substringBefore(" ")
-                        textSize = 9.5f
-                        typeface = Typeface.DEFAULT_BOLD
-                        setTextColor(TileThemePalette.getPrimaryTextColor(lp.tileColor))
-                        isSingleLine = true
-                    })
+                    addView(labelTv)
                 }
                 row.addView(card, LinearLayout.LayoutParams(0, dp(ctx, 36), 1f).apply {
                     if (idx < rowChunk.lastIndex) rightMargin = dp(ctx, 6)
@@ -428,7 +437,7 @@ object CustomizeMenuBuilder {
             addView(titleTv)
             addView(subTv)
         }
-        
+
     private fun swatchBg(ctx: Context, col: Int, active: Boolean) = GradientDrawable().apply {
         shape = GradientDrawable.OVAL
         setColor(col)
