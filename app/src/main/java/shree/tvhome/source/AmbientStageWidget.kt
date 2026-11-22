@@ -168,7 +168,8 @@ class AmbientStageWidget(
         addView(weatherCard, LayoutParams(-1, -2))
 
         refreshStyle()
-        updateTimeDisplay()
+        // Automatically repaint clock & weather stage on theme/accent change without view recreation
+        lp.addStyleListener { refreshStyle() }
     }
 
     private fun weatherCardBg(focused: Boolean) = GradientDrawable(
