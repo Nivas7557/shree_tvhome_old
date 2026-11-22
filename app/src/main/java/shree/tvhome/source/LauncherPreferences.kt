@@ -77,9 +77,9 @@ class LauncherPreferences(context: Context) {
     val prefs: SharedPreferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
     var accentColor: Int
-        get() = prefs.getInt(PREF_ACCENT_COLOR, TileThemePalette.ACCENTS.first().color)
+        get() = prefs.getInt(PREF_ACCENT, TileThemePalette.ACCENTS.first().color)
         set(value) {
-            prefs.edit().putInt(PREF_ACCENT_COLOR, value).apply()
+            prefs.edit().putInt(PREF_ACCENT, value).apply()
             notifyStyleChanged()
         }
 
