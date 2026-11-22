@@ -52,7 +52,11 @@ class LauncherPreferences(context: Context) {
         const val PREF_PICTURE_MODE = "picture_mode"
         const val PREF_CUSTOM_BRIGHTNESS = "custom_brightness_pct"
         const val PREF_CUSTOM_WARMTH = "custom_warmth_pct"
-        
+
+        // New Dynamic Upgrade Keys
+        const val PREF_NAMEPLATE_MODE = "nameplate_mode"
+        const val PREF_DND_ENABLED = "dnd_enabled"
+        const val PREF_SLEEP_TIMER_END_MS = "sleep_timer_end_ms"
     }
 
     val prefs: SharedPreferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
