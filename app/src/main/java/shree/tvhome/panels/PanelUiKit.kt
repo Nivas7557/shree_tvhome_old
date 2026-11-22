@@ -59,9 +59,11 @@ object PanelUiKit {
             )
         } else {
             val base = TileThemePalette.getTheme(themeKey).normalColors
+            val topCol = base.firstOrNull() ?: Color.rgb(22, 34, 72)
+            val botCol = base.lastOrNull() ?: topCol
             intArrayOf(
-                LauncherUtils.blendWithAccent(base, accent, 0.14f, 185),
-                LauncherUtils.withAlpha(base, 155)
+                LauncherUtils.blendWithAccent(topCol, accent, 0.14f, 185),
+                LauncherUtils.withAlpha(botCol, 155)
             )
         }
     ).apply {
