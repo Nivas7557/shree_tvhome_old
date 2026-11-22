@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://android.com"
+    xmlns:aapt="http://android.com"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Subtle Soft Drop Shadow Under Golden Crest -->
+    <path
+        android:pathData="M54,24 L82,42 L78,42 L78,80 L30,80 L30,42 L26,42 Z"
+        android:strokeWidth="3.2"
+        android:strokeColor="#45000000"
+        android:strokeLineJoin="round" />
+
+    <!-- Ornate Golden House Crest Outer Frame -->
+    <path
+        android:pathData="M54,23 L82,41 L77,41 L77,79 L31,79 L31,41 L26,41 Z"
+        android:strokeWidth="2.8"
+        android:strokeLineJoin="round"
+        android:strokeLineCap="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:startX="30"
+                android:startY="23"
+                android:endX="78"
+                android:endY="80">
+                <item android:offset="0.0" android:color="#FFFFF0B3" />
+                <item android:offset="0.45" android:color="#FFE6B84C" />
+                <item android:offset="1.0" android:color="#FF9E6F1E" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Inner Filigree Double-Line Frame -->
+    <path
+        android:pathData="M54,27.5 L73.5,40 V75.5 H34.5 V40 Z"
+        android:strokeWidth="1.1"
+        android:strokeColor="#CCFFE38F" />
+
+    <!-- Top Crown Flourish & Corner Scroll Accents -->
+    <path
+        android:pathData="M48,33 Q54,28 60,33 M34.5,70 Q39,70 39,75.5 M73.5,70 Q69,70 69,75.5"
+        android:strokeWidth="1.4"
+        android:strokeLineCap="round"
+        android:strokeColor="#FFFFE699" />
+
+    <!-- Bold Sculpted Royal Serif 'S' Monogram -->
+    <path
+        android:pathData="M61.5,45.5
+                          C61.5,41.8 58.2,39.5 53.8,39.5
+                          C49.2,39.5 46.2,41.9 46.2,45.3
+                          C46.2,49.2 50.1,50.8 54.8,52.2
+                          C60.2,53.8 63.8,56.1 63.8,61.2
+                          C63.8,66.4 59.3,69.8 53.2,69.8
+                          C47.5,69.8 44.2,66.9 44.2,63.0
+                          C44.2,61.0 45.6,59.7 47.4,59.7
+                          C49.1,59.7 50.3,60.9 50.3,62.5
+                          C50.3,64.3 51.6,65.6 53.8,65.6
+                          C56.6,65.6 58.5,63.9 58.5,61.4
+                          C58.5,58.4 55.4,57.1 51.0,55.7
+                          C45.8,54.0 42.2,51.6 42.2,46.4
+                          C42.2,41.2 46.7,37.2 53.8,37.2
+                          C59.8,37.2 64.2,40.3 64.2,44.6
+                          C64.2,46.4 63.0,47.5 61.5,47.5 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="44"
+                android:startY="38"
+                android:endX="63"
+                android:endY="69">
+                <item android:offset="0.0" android:color="#FFFFF5C2" />
+                <item android:offset="0.4" android:color="#FFF0C254" />
+                <item android:offset="0.8" android:color="#FFC48B28" />
+                <item android:offset="1.0" android:color="#FF8C5D12" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>
