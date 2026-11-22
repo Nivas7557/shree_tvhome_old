@@ -4,8 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 
 class LauncherPreferences(context: Context) {
-
-    private val prefs = context.getSharedPreferences("shree_tv_prefs", Context.MODE_PRIVATE)
+    
     private val styleListeners = java.util.concurrent.CopyOnWriteArrayList<() -> Unit>()
 
     // Register lightweight listeners so existing views repaint colors naturally without recreating layouts
