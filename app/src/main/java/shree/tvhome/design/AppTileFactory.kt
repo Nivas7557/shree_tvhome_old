@@ -192,7 +192,13 @@ object AppTileFactory {
             gravity = Gravity.CENTER
         }
         namePlate.addView(tv, FrameLayout.LayoutParams(-1, -2, Gravity.CENTER))
+        namePlate.visibility = when (lp.nameplateMode) {
+            "hidden" -> View.GONE
+            "focus" -> View.INVISIBLE
+            else -> View.VISIBLE
+        }
         unitContainer.addView(namePlate, LinearLayout.LayoutParams(-1, -2).apply {
+
             leftMargin = dp(ctx, 6)
             rightMargin = dp(ctx, 6)
             topMargin = dp(ctx, 3)
@@ -224,6 +230,9 @@ object AppTileFactory {
 
             innerCard.setFocusState(hasFocus)
             namePlate.background = nameplateBg(ctx, hasFocus, appColor)
+            if (lp.nameplateMode == "focus") {
+                namePlate.visibility = if (hasFocus) View.VISIBLE else View.INVISIBLE
+            }
             MotionEngine.animateFocus(unitContainer, hasFocus, lp.motionStyle, 1.11f, 12f, dx, dy)
 
             if (hasFocus) {
@@ -306,9 +315,14 @@ object AppTileFactory {
             card.setStyle(lp.accentColor, lp.tileShape, lp.tileColor, appCol)
         }
         wrapper.findViewWithTag<TextView>("tile_label")?.textSize = if (lp.columns > 6) 9f else 10.2f
+        wrapper.findViewWithTag<View>("name_plate")?.visibility = when (lp.nameplateMode) {
+            "hidden" -> View.GONE
+            "focus" -> if (wrapper.hasFocus()) View.VISIBLE else View.INVISIBLE
+            else -> View.VISIBLE
+        }
         wrapper.findViewWithTag<TextView>("tile_badge")?.let { applyBadgeState(it, lp, isFav) }
     }
-
+}
     private fun nameplateBg(ctx: Context, focused: Boolean, accentColor: Int) = GradientDrawable(
         GradientDrawable.Orientation.LEFT_RIGHT,
         if (focused) intArrayOf(LauncherUtils.withAlpha(accentColor, 225), LauncherUtils.withAlpha(accentColor, 145))
