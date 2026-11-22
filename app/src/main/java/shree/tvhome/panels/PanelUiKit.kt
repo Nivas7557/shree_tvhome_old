@@ -117,27 +117,106 @@ object PanelUiKit {
                     MotionEngine.animateFocus(v, f, lp.motionStyle, 1.04f, 4f)
                     if (f) {
                         v.background = GradientDrawable().apply {
-                            cornerRadius = LauncherUtils.dpF(ctx, 11f)
-                            setStroke(dp(ctx, 2), Color.WHITE)
-                        }
-                    } else {
-                        v.background = null
+                setTextColor(if (TileThemePalette.isLightTheme(lp.tileColor)) Color.rgb(18, 52, 128) else lp.accentColor)
+                letterSpacing = 0.09f
+            },
+            LinearLayout.LayoutParams(-1, -2).apply {
+                topMargin = dp(ctx, 10)
+                bottomMargin = dp(ctx, 5)
+            }
+        )
+    }
+
+    fun glassCardBg(ctx: Context, accent: Int, active: Boolean, themeKey: String? = null) = GradientDrawable(
+        GradientDrawable.Orientation.TOP_BOTTOM,
+        if (active) {
+            intArrayOf(
+                LauncherUtils.withAlpha(accent, 225),
+                LauncherUtils.withAlpha(accent, 145)
+            )
+        } else {
+            val base = TileThemePalette.getTheme(themeKey).normalColors
+            intArrayOf(
+                LauncherUtils.blendWithAccent(base[0], accent, 0.14f, 185),
+                LauncherUtils.withAlpha(base[1], 155)
+            )
+        }
+    ).apply {
+        cornerRadius = LauncherUtils.dpF(ctx, 14f)
+        setStroke(
+            dp(ctx, if (active) 2 else 1),
+            if (active) Color.WHITE else LauncherUtils.withAlpha(accent, 115)
+        )
+    }
+
+    // Smooth, zero-jitter segmented option row using user's selected MotionEngine style
+    fun addSegmentedTrack(
+        ctx: Context,
+        parent: LinearLayout,
+        lp: LauncherPreferences,
+        options: List<Pair<String, String>>,
+        getSelected: () -> String,
+        onSelect: (String) -> Unit
+    ) {
+        val row = LinearLayout(ctx).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(dp(ctx, 3), dp(ctx, 3), dp(ctx, 3), dp(ctx, 3))
+            clipChildren = false
+            clipToPadding = false
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TOP_BOTTOM,
+                intArrayOf(Color.argb(85, 10, 16, 38), Color.argb(55, 22, 34, 72))
+            ).apply {
+                cornerRadius = LauncherUtils.dpF(ctx, 14f)
+                setStroke(dp(ctx, 1), LauncherUtils.withAlpha(lp.accentColor, 95))
+            }
+        }
+
+        val buttons = ArrayList<Pair<String, TextView>>()
+        fun refreshChips() {
+            val current = getSelected()
+            val textColor = TileThemePalette.getPrimaryTextColor(lp.tileColor)
+            buttons.forEach { (k, tv) ->
+                val isSel = k == current
+                tv.setTextColor(if (isSel) Color.WHITE else textColor)
+                tv.background = if (isSel || tv.hasFocus()) {
+                    GradientDrawable(
+                        GradientDrawable.Orientation.LEFT_RIGHT,
+                        intArrayOf(LauncherUtils.withAlpha(lp.accentColor, 230), LauncherUtils.withAlpha(lp.accentColor, 155))
+                    ).apply {
+                        cornerRadius = LauncherUtils.dpF(ctx, 11f)
+                        setStroke(dp(ctx, if (tv.hasFocus()) 2 else 1), Color.WHITE)
                     }
+                } else null
+            }
+        }
+
+        options.forEachIndexed { idx, (key, label) ->
+            val tv = TextView(ctx).apply {
+                text = label
+                textSize = 9.2f
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = Gravity.CENTER
+                isSingleLine = true
+                ellipsize = TextUtils.TruncateAt.END
+                isFocusable = true
+                isClickable = true
+                setOnFocusChangeListener { v, f ->
+                    MotionEngine.animateFocus(v, f, lp.motionStyle, 1.05f, 4f)
+                    refreshChips()
                 }
                 setOnClickListener {
                     onSelect(key)
-                    val targetView = itemViews.find { it.first == key }?.second ?: return@setOnClickListener
-                    activeThumb.layoutParams.width = targetView.width
-                    activeThumb.requestLayout()
-                    activeThumb.animate()
-                        .x(targetView.x)
-                        .setDuration(240L)
-                        .setInterpolator(LauncherUtils.FLUID_SPRING)
-                        .start()
+                    refreshChips()
                 }
             }
-            itemViews.add(key to tv)
-            row.addView(tv, LinearLayout.LayoutParams(0, dp(ctx, 30), 1f))
+            buttons.add(key to tv)
+            row.addView(tv, LinearLayout.LayoutParams(0, dp(ctx, 30), 1f).apply {
+                if (idx < options.lastIndex) rightMargin = dp(ctx, 3)
+            })
+        }
+        refreshChips()
+        parent.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 6) })
         }
 
         track.addView(row, FrameLayout.LayoutParams(-1, -2))
@@ -282,15 +361,17 @@ object PanelUiKit {
         trailingText: String = "›",
         onClick: () -> Unit
     ) = LinearLayout(ctx).apply {
+        val primaryCol = TileThemePalette.getPrimaryTextColor(lp.tileColor)
+        val secondaryCol = TileThemePalette.getSecondaryTextColor(lp.tileColor)
         orientation = LinearLayout.HORIZONTAL
         gravity = Gravity.CENTER_VERTICAL
         setPadding(dp(ctx, 12), dp(ctx, 9), dp(ctx, 12), dp(ctx, 9))
         isFocusable = true
         isClickable = true
-        background = glassCardBg(ctx, lp.accentColor, false)
+        background = glassCardBg(ctx, lp.accentColor, false, lp.tileColor)
         setOnFocusChangeListener { v, f ->
             MotionEngine.animateFocus(v, f, lp.motionStyle, 1.02f, 4f)
-            v.background = glassCardBg(ctx, lp.accentColor, f)
+            v.background = glassCardBg(ctx, lp.accentColor, f, lp.tileColor)
         }
         setOnClickListener { onClick() }
         addView(TextView(ctx).apply {
@@ -304,14 +385,14 @@ object PanelUiKit {
             text = title
             textSize = 10.5f
             typeface = Typeface.DEFAULT_BOLD
-            setTextColor(Color.WHITE)
+            setTextColor(primaryCol)
             isSingleLine = true
             ellipsize = TextUtils.TruncateAt.END
         })
         mid.addView(TextView(ctx).apply {
             text = sub
             textSize = 8.5f
-            setTextColor(Color.argb(190, 210, 230, 245))
+            setTextColor(secondaryCol)
             isSingleLine = true
             ellipsize = TextUtils.TruncateAt.END
         })
@@ -320,7 +401,7 @@ object PanelUiKit {
             text = trailingText
             textSize = 13f
             typeface = Typeface.DEFAULT_BOLD
-            setTextColor(Color.argb(200, 255, 255, 255))
+            setTextColor(primaryCol)
         })
     }
 
