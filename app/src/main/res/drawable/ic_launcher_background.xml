@@ -5,62 +5,43 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Base 3-Tone Diagonal Jewel Gradient (Emerald -> Teal -> Deep Ocean Blue) -->
-    <path android:pathData="M0,0 H108 V108 H0 Z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:type="linear"
-                android:startX="14"
-                android:startY="14"
-                android:endX="94"
-                android:endY="94">
-                <item android:offset="0.0" android:color="#FF1A9666" />
-                <item android:offset="0.48" android:color="#FF116D72" />
-                <item android:offset="1.0" android:color="#FF093B5E" />
-            </gradient>
-        </aapt:attr>
-    </path>
+    <!-- Deep Ocean Blue Base -->
+    <path
+        android:fillColor="#083B5E"
+        android:pathData="M0,0 L108,0 L108,108 L0,108 Z" />
 
-    <!-- 3D Glossy Top-Left Specular Glass Dome Reflection -->
-    <path android:pathData="M0,0 H108 V48 Q54,62 0,46 Z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:type="linear"
-                android:startX="46"
-                android:startY="0"
-                android:endX="58"
-                android:endY="56">
-                <item android:offset="0.0" android:color="#78FFFFFF" />
-                <item android:offset="0.45" android:color="#28FFFFFF" />
-                <item android:offset="1.0" android:color="#00FFFFFF" />
-            </gradient>
-        </aapt:attr>
-    </path>
+    <!-- Rich Teal Mid-Layer -->
+    <path
+        android:fillColor="#117A75"
+        android:pathData="M0,0 L108,0 L108,74 Q54,96 0,70 Z" />
 
-    <!-- Bottom 3D Rim Depth Vignette -->
-    <path android:pathData="M0,68 H108 V108 H0 Z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:type="linear"
-                android:startX="54"
-                android:startY="68"
-                android:endX="54"
-                android:endY="108">
-                <item android:offset="0.0" android:color="#00041424" />
-                <item android:offset="1.0" android:color="#66041424" />
-            </gradient>
-        </aapt:attr>
-    </path>
+    <!-- Vibrant Emerald Top-Left Light Source -->
+    <path
+        android:fillColor="#1CA36E"
+        android:pathData="M0,0 L88,0 Q56,52 0,68 Z" />
 
-    <!-- Fine Golden & White Starlight Dust Sparkles -->
-    <path android:fillColor="#B5FFF0AA" android:pathData="M24,25 m-0.9,0 a0.9,0.9 0 1,0 1.8,0 a0.9,0.9 0 1,0 -1.8,0" />
-    <path android:fillColor="#90FFFFFF" android:pathData="M34,20 m-0.6,0 a0.6,0.6 0 1,0 1.2,0 a0.6,0.6 0 1,0 -1.2,0" />
-    <path android:fillColor="#A5FFE699" android:pathData="M78,24 m-0.8,0 a0.8,0.8 0 1,0 1.6,0 a0.8,0.8 0 1,0 -1.6,0" />
-    <path android:fillColor="#85FFFFFF" android:pathData="M86,34 m-0.7,0 a0.7,0.7 0 1,0 1.4,0 a0.7,0.7 0 1,0 -1.4,0" />
-    <path android:fillColor="#B0FFF0AA" android:pathData="M21,58 m-0.8,0 a0.8,0.8 0 1,0 1.6,0 a0.8,0.8 0 1,0 -1.6,0" />
-    <path android:fillColor="#95FFFFFF" android:pathData="M88,62 m-0.7,0 a0.7,0.7 0 1,0 1.4,0 a0.7,0.7 0 1,0 -1.4,0" />
-    <path android:fillColor="#B5FFE699" android:pathData="M25,83 m-0.9,0 a0.9,0.9 0 1,0 1.8,0 a0.9,0.9 0 1,0 -1.8,0" />
-    <path android:fillColor="#80FFFFFF" android:pathData="M45,44 m-0.6,0 a0.6,0.6 0 1,0 1.2,0 a0.6,0.6 0 1,0 -1.2,0" />
-    <path android:fillColor="#95FFF0AA" android:pathData="M65,64 m-0.7,0 a0.7,0.7 0 1,0 1.4,0 a0.7,0.7 0 1,0 -1.4,0" />
-    <path android:fillColor="#90FFFFFF" android:pathData="M81,82 m-0.8,0 a0.8,0.8 0 1,0 1.6,0 a0.8,0.8 0 1,0 -1.6,0" />
+    <!-- 3D Glossy Curved Glass Dome Reflection -->
+    <path
+        android:fillColor="#52FFFFFF"
+        android:pathData="M0,0 L108,0 L108,34 Q54,54 0,32 Z" />
+
+    <!-- Secondary Soft Glass Sheen -->
+    <path
+        android:fillColor="#22FFFFFF"
+        android:pathData="M8,10 Q54,28 100,10 L100,24 Q54,40 8,24 Z" />
+
+    <!-- Bottom & Edge 3D Embedded Depth Shadow -->
+    <path
+        android:fillColor="#5E031222"
+        android:pathData="M0,82 Q54,74 108,82 L108,108 L0,108 Z" />
+
+    <!-- Starlight Gold & White Sparkle Dust -->
+    <path android:fillColor="#D9FFF0AA" android:pathData="M24,24 L25,25 L24,26 L23,25 Z" />
+    <path android:fillColor="#B3FFFFFF" android:pathData="M36,19 L36.8,19.8 L36,20.6 L35.2,19.8 Z" />
+    <path android:fillColor="#CCFFE699" android:pathData="M78,24 L79,25 L78,26 L77,25 Z" />
+    <path android:fillColor="#A6FFFFFF" android:pathData="M86,34 L86.8,34.8 L86,35.6 L85.2,34.8 Z" />
+    <path android:fillColor="#D9FFF0AA" android:pathData="M21,58 L22,59 L21,60 L20,59 Z" />
+    <path android:fillColor="#B3FFFFFF" android:pathData="M87,62 L87.8,62.8 L87,63.6 L86.2,62.8 Z" />
+    <path android:fillColor="#CCFFE699" android:pathData="M25,83 L26,84 L25,85 L24,84 Z" />
+    <path android:fillColor="#B3FFFFFF" android:pathData="M81,82 L82,83 L81,84 L80,83 Z" />
 </vector>
