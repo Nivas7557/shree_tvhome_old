@@ -16,7 +16,7 @@ jobs:
     permissions:
       contents: write
 
-    # Sequential list of tasks to build and rotate the APKs
+    # Sequential list of tasks to build, verify, and rotate the APKs
     steps:
       # Step 1: Downloads your repository code onto the virtual machine
       - name: Check out source
@@ -39,7 +39,7 @@ jobs:
       - name: Get IST Time and Date
         id: timestamp
         run: |
-          # Formats the timestamp as 12-hour Hour-MinuteAM/PM_Day-Month (e.g., 12-15PM_24-11)
+          # Formats the timestamp as 12-hour Hour-MinuteAM/PM_Day-Month (e.g., 12-29PM_24-11)
           STAMP=$(TZ='Asia/Kolkata' date +'%I-%M%p_%d-%m')
           # Saves the timestamp into an output variable named 'dt' for later steps
           echo "dt=$STAMP" >> $GITHUB_OUTPUT
@@ -48,41 +48,101 @@ jobs:
       - name: Build debug APK
         run: gradle assembleDebug
 
-      # Step 6: Rotates the last 4 builds inside the 'Generated Apks' folder in this repository
-      - name: Rotate and Save Last 4 APKs in Generated Apks Folder
+      # Step 6: Verifies APK existence, file size, and Android manifest parsing before touching old APKs
+      - name: Verify and Parse Generated APK
+        run: |
+          APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
+
+          # Check 1: Verify the APK file actually exists
+          if [ ! -f "$APK_PATH" ]; then
+            echo "::error::Build finished, but no APK file was generated! Existing APKs were NOT touched."
+            echo "### ❌ Build Failed: No APK Generated" >> $GITHUB_STEP_SUMMARY
+            echo "Gradle completed without creating an APK file. All previous APKs in \`Generated Apks\` remain safe and untouched." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          # Check 2: Verify the APK file is not empty (0 bytes)
+          if [ ! -s "$APK_PATH" ]; then
+            echo "::error::Generated APK is empty (0 bytes)! Existing APKs were NOT touched."
+            echo "### ❌ Build Failed: Empty APK File" >> $GITHUB_STEP_SUMMARY
+            echo "The generated APK is 0 bytes (corrupt). All previous APKs in \`Generated Apks\` remain safe and untouched." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          # Check 3: Test parsing the APK using Android SDK's aapt2 tool (prevents 'Parse Error' on devices)
+          AAPT2=$(find "$ANDROID_HOME/build-tools" -name "aapt2" | sort -V | tail -n 1)
+          if [ -n "$AAPT2" ]; then
+            if ! "$AAPT2" dump badging "$APK_PATH" > /dev/null 2>&1; then
+              echo "::error::APK Parse Failed! The generated APK is corrupted. Existing APKs were NOT replaced."
+              echo "### ❌ APK Parse Error: Corrupt Package" >> $GITHUB_STEP_SUMMARY
+              echo "The APK failed Android manifest validation (\`aapt2\` parse check). It would fail to install on a device, so **no old APKs were deleted or replaced**." >> $GITHUB_STEP_SUMMARY
+              exit 1
+            fi
+          fi
+
+          # If all checks pass, log success notice
+          APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
+          echo "::notice::APK verified and parsed successfully (Size: $APK_SIZE)."
+
+      # Step 7: Automatically rotates the APKs based on the MAX_BUILDS number set below
+      - name: Rotate and Save APKs in Generated Apks Folder
         env:
+          # CHANGE THIS NUMBER ONLY: Total number of APKs to keep (e.g., 3, 4, 5)
+          MAX_BUILDS: 4
           # Current build timestamp
           DT: ${{ steps.timestamp.outputs.dt }}
         run: |
           # Create the 'Generated Apks' folder if it doesn't already exist
           mkdir -p "Generated Apks"
-          
-          # Navigate into the folder
           cd "Generated Apks"
-          
-          # 1. Delete the oldest build (old_3) if it exists
-          rm -f old_3_*.apk
-          
-          # 2. Shift old_2 to old_3 (preserving its original timestamp)
-          for f in old_2_*.apk; do [ -e "$f" ] && mv "$f" "${f/old_2_/old_3_}"; done
-          
-          # 3. Shift old_1 to old_2 (preserving its original timestamp)
-          for f in old_1_*.apk; do [ -e "$f" ] && mv "$f" "${f/old_1_/old_2_}"; done
-          
-          # 4. Shift previous 'new' build to old_1 (preserving its original timestamp)
-          for f in new_*.apk; do [ -e "$f" ] && mv "$f" "${f/new_/old_1_}"; done
-          
-          # 5. Copy the newly built APK directly into the folder with the 'new_' prefix and current timestamp
-          cp "../app/build/outputs/apk/debug/app-debug.apk" "new_${DT}.apk"
-          
+
+          # Calculate the oldest allowed index (e.g., if MAX_BUILDS=4, oldest is old_3)
+          OLDEST=$((MAX_BUILDS - 1))
+
+          # 1. Delete the oldest build and any extra old builds if MAX_BUILDS was reduced
+          for f in Nivas_Launcher_old_*.apk; do
+            [ -e "$f" ] || continue
+            num=$(echo "$f" | sed -n 's/^Nivas_Launcher_old_\([0-9]\+\)_.*\.apk$/\1/p')
+            if [ -n "$num" ] && [ "$num" -ge "$OLDEST" ]; then
+              rm -f "$f"
+            fi
+          done
+
+          # 2. Shift existing old builds down by 1 position (from highest to lowest)
+          for ((i=OLDEST-1; i>=1; i--)); do
+            next=$((i + 1))
+            for f in Nivas_Launcher_old_${i}_*.apk; do
+              [ -e "$f" ] && mv "$f" "${f/Nivas_Launcher_old_${i}_/Nivas_Launcher_old_${next}_}"
+            done
+          done
+
+          # 3. Shift previous 'new' build to 'old_1' (or delete it if MAX_BUILDS is 1)
+          if [ "$OLDEST" -ge 1 ]; then
+            for f in Nivas_Launcher_new_*.apk; do
+              [ -e "$f" ] && mv "$f" "${f/Nivas_Launcher_new_/Nivas_Launcher_old_1_}"
+            done
+          else
+            rm -f Nivas_Launcher_new_*.apk
+          fi
+
+          # 4. Copy the newly verified APK into the folder with the 'Nivas_Launcher_new_' prefix
+          cp "../app/build/outputs/apk/debug/app-debug.apk" "Nivas_Launcher_new_${DT}.apk"
+
           # Go back to the root directory of the repository
           cd ..
-          
+
           # Configure Git bot identity for the automated commit
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@://github.com"
-          
+
           # Stage all changes inside the 'Generated Apks' folder, commit, and push to the current branch
           git add "Generated Apks"
-          git commit -m "Update APKs: new_${DT}.apk (3-build rotation)"
+          git commit -m "Update APKs: Nivas_Launcher_new_${DT}.apk (Last ${MAX_BUILDS} builds)"
           git push
+
+          # Write a clear success summary notice to the GitHub Actions run page
+          APK_SIZE=$(du -h "Generated Apks/Nivas_Launcher_new_${DT}.apk" | cut -f1)
+          echo "### ✅ APK Successfully Built & Saved" >> $GITHUB_STEP_SUMMARY
+          echo "- **New File:** \`Nivas_Launcher_new_${DT}.apk\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **File Size:** ${APK_SIZE}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Rotation Policy:** Kept last **${MAX_BUILDS}** builds in \`Generated Apks/\`" >> $GITHUB_STEP_SUMMARY
