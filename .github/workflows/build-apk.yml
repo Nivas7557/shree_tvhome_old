@@ -40,7 +40,7 @@ jobs:
         id: timestamp
         run: |
           # Formats the timestamp as 12-hour Hour-MinuteAM/PM_Day-Month (e.g., 12-29PM_24-11)
-          STAMP=$(TZ='Asia/Kolkata' date +'%I-%M%p_%d-%m')
+          STAMP=$(TZ='Asia/Kolkata' date +'%I-%M_%p_%d-%m')
           # Saves the timestamp into an output variable named 'dt' for later steps
           echo "dt=$STAMP" >> $GITHUB_OUTPUT
 
