@@ -42,3 +42,19 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug_${{ steps.timestamp.outputs.dt }}.apk
           retention-days: 7
           if-no-files-found: error
+
+      - name: Prepare Fixed Name APK for Tester
+        run: |
+          cp app/build/outputs/apk/debug/app-debug_${{ steps.timestamp.outputs.dt }}.apk nivas_launcher.apk
+
+      - name: Push Fixed Name APK to Central Tester Repo
+        uses: dmnemec/copy_file_to_another_repo_action@main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.TESTER_REPO_TOKEN }}
+        with:
+          source_file: 'nivas_launcher.apk'
+          destination_repo: 'Nivas7557/apk-tester'
+          destination_folder: 'apks'
+          destination_branch: 'main'
+          user_email: 'pandarapaka39@gmail.com'
+          user_name: 'Nivas7557'
