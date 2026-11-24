@@ -39,7 +39,7 @@ jobs:
       - name: Get IST Time and Date
         id: timestamp
         run: |
-          # Formats the timestamp as 12-hour Hour-Minute_AM/PM_Day-Month (e.g., 01-03_PM_24-11)
+          # Formats the timestamp as 12-hour Hour-Minute_AM/PM_Day-Month (e.g., 01-34_PM_24-11)
           STAMP=$(TZ='Asia/Kolkata' date +'%I-%M_%p_%d-%m')
           # Saves the timestamp into an output variable named 'dt' for later steps
           echo "dt=$STAMP" >> $GITHUB_OUTPUT
@@ -105,16 +105,20 @@ jobs:
           # Build dynamic folder name: <repo_name>_<branch_name> (replaces any '/' in branch names with '_')
           SAFE_BRANCH=$(echo "$BRANCH_NAME" | tr '/' '_')
           TARGET_FOLDER="${REPO_NAME}_${SAFE_BRANCH}"
+          
+          # Construct clean GitHub repository URL safely
+          HOST="github.com"
+          REPO_URL="https://x-access-token:${PAT_TOKEN}@${HOST}/${PRIVATE_REPO}.git"
 
           # Clone the private APK repository (shallow clone with depth 1 to keep it fast)
-          if git ls-remote --exit-code --heads "https://x-access-token:${PAT_TOKEN}@://github.com{PRIVATE_REPO}.git" "$PRIVATE_BRANCH" >/dev/null 2>&1; then
-            git clone --depth 1 --branch "$PRIVATE_BRANCH" "https://x-access-token:${PAT_TOKEN}@://github.com{PRIVATE_REPO}.git" private_apk_repo
+          if git ls-remote --exit-code --heads "$REPO_URL" "$PRIVATE_BRANCH" >/dev/null 2>&1; then
+            git clone --depth 1 --branch "$PRIVATE_BRANCH" "$REPO_URL" private_apk_repo
             cd private_apk_repo
           else
             mkdir private_apk_repo
             cd private_apk_repo
             git init
-            git remote add origin "https://x-access-token:${PAT_TOKEN}@://github.com{PRIVATE_REPO}.git"
+            git remote add origin "$REPO_URL"
           fi
 
           # Create or enter the specific <repo>_<branch> folder (leaves all other folders untouched!)
@@ -159,7 +163,7 @@ jobs:
           # Create a fresh orphan commit (preserves ALL folders in the repo, but wipes old Git history bloat)
           git checkout --orphan temp_clean_branch
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@://github.com"
+          git config user.email "github-actions[bot]@users.noreply.${HOST}"
           git add -A
           git commit -m "Update ${TARGET_FOLDER}: Nivas_Launcher_new_${DT}.apk (Last ${MAX_BUILDS} builds)"
 
@@ -170,6 +174,10 @@ jobs:
           APK_SIZE=$(du -h "${TARGET_FOLDER}/Nivas_Launcher_new_${DT}.apk" | cut -f1)
           echo "### ✅ APK Successfully Built & Saved to Private Repo" >> $GITHUB_STEP_SUMMARY
           echo "- **Private Repo:** \`${PRIVATE_REPO}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Target Folder:** \`${TARGET_FOLDER}/\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **New File:** \`Nivas_Launcher_new_${DT}.apk\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **File Size:** ${APK_SIZE}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Rotation Policy:** Kept last **${MAX_BUILDS}** builds per branch (Zero history bloat)" >> $GITHUB_STEP_SUMMARY
           echo "- **Target Folder:** \`${TARGET_FOLDER}/\`" >> $GITHUB_STEP_SUMMARY
           echo "- **New File:** \`Nivas_Launcher_new_${DT}.apk\`" >> $GITHUB_STEP_SUMMARY
           echo "- **File Size:** ${APK_SIZE}" >> $GITHUB_STEP_SUMMARY
