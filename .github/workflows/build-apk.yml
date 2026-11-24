@@ -1,62 +1,106 @@
+# Name of the workflow displayed in the GitHub Actions tab
 name: Android Debug APK
 
+# Defines when this workflow should run
 on:
+  # Allows you to run this workflow manually from the GitHub Actions tab
   workflow_dispatch:
 
+# List of jobs that will execute when the workflow runs
 jobs:
   build:
+    # Uses the latest Ubuntu Linux virtual machine provided by GitHub
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
 
+    # Grants write access so the workflow can create folders and push APKs back to this repository
+    permissions:
+      contents: write
+
+    # Sequential list of tasks to build and rotate the APKs
     steps:
+      # Step 1: Downloads your repository code onto the virtual machine
       - name: Check out source
         uses: actions/checkout@v5
 
+      # Step 2: Installs Java 17 (Temurin distribution) required for Android builds
       - name: Set up Java
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
 
+      # Step 3: Sets up Gradle version 8.9 and configures caching for faster builds
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v5
         with:
           gradle-version: '8.9'
 
+      # Step 4: Captures the current Indian Standard Time (IST) in 12-hour AM/PM format and date
       - name: Get IST Time and Date
         id: timestamp
         run: |
-          STAMP=$(TZ='Asia/Kolkata' date +'%H-%M_%d-%m')
+          # Formats the timestamp as 12-hour Hour-MinuteAM/PM_Day-Month (e.g., 02-30PM_24-11)
+          STAMP=$(TZ='Asia/Kolkata' date +'%I-%M%p_%d-%m')
+          # Saves the timestamp into an output variable named 'dt' for later steps
           echo "dt=$STAMP" >> $GITHUB_OUTPUT
 
+      # Step 5: Compiles the project and generates the debug APK
       - name: Build debug APK
         run: gradle assembleDebug
 
+      # Step 6: Renames the generated APK to include the IST 12-hour timestamp
       - name: Rename APK with Timestamp
         run: |
           mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/app-debug_${{ steps.timestamp.outputs.dt }}.apk
 
+      # Step 7: Uploads the timestamped APK to GitHub Actions for manual download
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v5
         with:
+          # Name of the downloadable artifact zip file
           name: Nivas_Launcher_${{ steps.timestamp.outputs.dt }}
+          # File path of the renamed APK to upload
           path: app/build/outputs/apk/debug/app-debug_${{ steps.timestamp.outputs.dt }}.apk
+          # Automatically deletes the uploaded APK after 7 days to save storage
           retention-days: 7
+          # Fails the workflow if the APK file is missing
           if-no-files-found: error
 
-      - name: Prepare Fixed Name APK for Tester
-        run: |
-          cp app/build/outputs/apk/debug/app-debug_${{ steps.timestamp.outputs.dt }}.apk nivas_launcher.apk
-
-      - name: Push Fixed Name APK to Central Tester Repo
-        uses: dmnemec/copy_file_to_another_repo_action@main
+      # Step 8: Rotates the last 4 builds inside the 'Generated Apks' folder in this same repository
+      - name: Rotate and Save Last 4 APKs in Generated Apks Folder
         env:
-          API_TOKEN_GITHUB: ${{ secrets.TESTER_REPO_TOKEN }}
-        with:
-          source_file: 'nivas_launcher.apk'
-          destination_repo: 'Nivas7557/apk-tester'
-          destination_folder: 'apks'
-          destination_branch: 'main'
-          user_email: 'pandarapaka39@gmail.com'
-          user_name: 'Nivas7557'
+          # Current build timestamp
+          DT: ${{ steps.timestamp.outputs.dt }}
+        run: |
+          # Create the 'Generated Apks' folder if it doesn't already exist
+          mkdir -p "Generated Apks"
+          
+          # Navigate into the folder
+          cd "Generated Apks"
+          
+          # 1. Delete the oldest build (old_3) if it exists
+          rm -f old_3_*.apk
+          
+          # 2. Shift old_2 to old_3 (preserving its original timestamp)
+          for f in old_2_*.apk; do [ -e "$f" ] && mv "$f" "${f/old_2_/old_3_}"; done
+          
+          # 3. Shift old_1 to old_2 (preserving its original timestamp)
+          for f in old_1_*.apk; do [ -e "$f" ] && mv "$f" "${f/old_1_/old_2_}"; done
+          
+          # 4. Shift previous 'new' build to old_1 (preserving its original timestamp)
+          for f in new_*.apk; do [ -e "$f" ] && mv "$f" "${f/new_/old_1_}"; done
+          
+          # 5. Copy the latest APK into the folder with the 'new_' prefix and current timestamp
+          cp "../app/build/outputs/apk/debug/app-debug_${DT}.apk" "new_${DT}.apk"
+          
+          # Go back to the root directory of the repository
+          cd ..
+          
+          # Configure Git bot identity for the automated commit
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@://github.com"
+          
+          # Stage all changes inside the 'Generated Apks' folder, commit, and push to the current branch
+          git add "Generated Apks"
+          git commit -m "Update APKs: new_${DT}.apk (4-build rotation)"
+          git push
