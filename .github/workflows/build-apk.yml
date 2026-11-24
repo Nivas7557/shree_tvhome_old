@@ -175,17 +175,13 @@ jobs:
           git add -A
           git commit -m "Update ${TARGET_FOLDER}: Nivas_Launcher_new_${DT}.apk (Last ${MAX_BUILDS} builds)"
 
-          # Force-push the clean state to the private APK repository
+                   # Force-push the clean state to the private APK repository
           git push -f origin temp_clean_branch:"$PRIVATE_BRANCH"
 
           # Write a clear success summary notice to the GitHub Actions run page
           APK_SIZE=$(du -h "${TARGET_FOLDER}/Nivas_Launcher_new_${DT}.apk" | cut -f1)
           echo "### ✅ APK Successfully Built & Saved to Private Repo" >> $GITHUB_STEP_SUMMARY
           echo "- **Private Repo:** \`${PRIVATE_REPO}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Target Folder:** \`${TARGET_FOLDER}/\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **New File:** \`Nivas_Launcher_new_${DT}.apk\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **File Size:** ${APK_SIZE}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Rotation Policy:** Kept last **${MAX_BUILDS}** builds per branch (Zero history bloat)" >> $GITHUB_STEP_SUMMARY
           echo "- **Target Folder:** \`${TARGET_FOLDER}/\`" >> $GITHUB_STEP_SUMMARY
           echo "- **New File:** \`Nivas_Launcher_new_${DT}.apk\`" >> $GITHUB_STEP_SUMMARY
           echo "- **File Size:** ${APK_SIZE}" >> $GITHUB_STEP_SUMMARY
