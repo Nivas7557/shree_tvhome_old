@@ -39,7 +39,7 @@ jobs:
       - name: Get IST Time and Date
         id: timestamp
         run: |
-          # Formats the timestamp as 12-hour Hour-MinuteAM/PM_Day-Month (e.g., 02-30PM_24-11)
+          # Formats the timestamp as 12-hour Hour-MinuteAM/PM_Day-Month (e.g., 12-15PM_24-11)
           STAMP=$(TZ='Asia/Kolkata' date +'%I-%M%p_%d-%m')
           # Saves the timestamp into an output variable named 'dt' for later steps
           echo "dt=$STAMP" >> $GITHUB_OUTPUT
@@ -48,25 +48,7 @@ jobs:
       - name: Build debug APK
         run: gradle assembleDebug
 
-      # Step 6: Renames the generated APK to include the IST 12-hour timestamp
-      - name: Rename APK with Timestamp
-        run: |
-          mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/app-debug_${{ steps.timestamp.outputs.dt }}.apk
-
-      # Step 7: Uploads the timestamped APK to GitHub Actions for manual download
-      - name: Upload debug APK artifact
-        uses: actions/upload-artifact@v5
-        with:
-          # Name of the downloadable artifact zip file
-          name: Nivas_Launcher_${{ steps.timestamp.outputs.dt }}
-          # File path of the renamed APK to upload
-          path: app/build/outputs/apk/debug/app-debug_${{ steps.timestamp.outputs.dt }}.apk
-          # Automatically deletes the uploaded APK after 7 days to save storage
-          retention-days: 7
-          # Fails the workflow if the APK file is missing
-          if-no-files-found: error
-
-      # Step 8: Rotates the last 4 builds inside the 'Generated Apks' folder in this same repository
+      # Step 6: Rotates the last 4 builds inside the 'Generated Apks' folder in this repository
       - name: Rotate and Save Last 4 APKs in Generated Apks Folder
         env:
           # Current build timestamp
@@ -90,8 +72,8 @@ jobs:
           # 4. Shift previous 'new' build to old_1 (preserving its original timestamp)
           for f in new_*.apk; do [ -e "$f" ] && mv "$f" "${f/new_/old_1_}"; done
           
-          # 5. Copy the latest APK into the folder with the 'new_' prefix and current timestamp
-          cp "../app/build/outputs/apk/debug/app-debug_${DT}.apk" "new_${DT}.apk"
+          # 5. Copy the newly built APK directly into the folder with the 'new_' prefix and current timestamp
+          cp "../app/build/outputs/apk/debug/app-debug.apk" "new_${DT}.apk"
           
           # Go back to the root directory of the repository
           cd ..
