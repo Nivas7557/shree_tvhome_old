@@ -39,7 +39,7 @@ jobs:
       - name: Get IST Time and Date
         id: timestamp
         run: |
-          # Formats the timestamp as 12-hour Hour-Minute_AM/PM_Day-Month (e.g., 01-34_PM_24-11)
+          # Formats the timestamp as 12-hour Hour-Minute_AM/PM_Day-Month (e.g., 01-58_PM_24-11)
           STAMP=$(TZ='Asia/Kolkata' date +'%I-%M_%p_%d-%m')
           # Saves the timestamp into an output variable named 'dt' for later steps
           echo "dt=$STAMP" >> $GITHUB_OUTPUT
@@ -100,7 +100,7 @@ jobs:
           DT: ${{ steps.timestamp.outputs.dt }}
           # Automatically extracts current repository name (e.g., shree_tvhome)
           REPO_NAME: ${{ github.event.repository.name }}
-          # Automatically extracts current branch name (e.g., main or testing)
+          # Automatically extracts current branch name (e.g., main or Upgrades_Testing)
           BRANCH_NAME: ${{ github.ref_name }}
         run: |
           # Automatically apply build limit based on whether the branch is 'main' or another branch
@@ -133,7 +133,7 @@ jobs:
           mkdir -p "$TARGET_FOLDER"
           cd "$TARGET_FOLDER"
 
-          # Calculate the oldest allowed index (e.g., if MAX_BUILDS=4, oldest is old_3)
+          # Calculate the oldest allowed index (e.g., if MAX_BUILDS=6, oldest is old_5)
           OLDEST=$((MAX_BUILDS - 1))
 
           # 1. Delete the oldest build and any extra old builds if MAX_BUILDS was reduced
@@ -175,7 +175,7 @@ jobs:
           git add -A
           git commit -m "Update ${TARGET_FOLDER}: Nivas_Launcher_new_${DT}.apk (Last ${MAX_BUILDS} builds)"
 
-                   # Force-push the clean state to the private APK repository
+          # Force-push the clean state to the private APK repository
           git push -f origin temp_clean_branch:"$PRIVATE_BRANCH"
 
           # Write a clear success summary notice to the GitHub Actions run page
