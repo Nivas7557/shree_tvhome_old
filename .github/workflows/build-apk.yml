@@ -84,5 +84,5 @@ jobs:
           
           # Stage all changes inside the 'Generated Apks' folder, commit, and push to the current branch
           git add "Generated Apks"
-          git commit -m "Update APKs: new_${DT}.apk (4-build rotation)"
+          git commit -m "Update APKs: new_${DT}.apk (3-build rotation)"
           git push
