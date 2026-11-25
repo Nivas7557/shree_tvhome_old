@@ -114,11 +114,10 @@ object TileThemePalette {
         OptionSpec("classic", "■ Classic")
     )
 
-    val BADGE_MODES = listOf(
-        OptionSpec("accent", "● Dot"),
-        OptionSpec("heart", "♥ Heart"),
-        OptionSpec("star", "★ Star"),
-        OptionSpec("none", "Off")
+    val GRID_LAYOUT_MODES = listOf(
+        OptionSpec("classic", "⊞ Classic"),
+        OptionSpec("bento", "🍱 Bento"),
+        OptionSpec("cinema", "🎬 Cinema")
     )
 
     val PANEL_WIDTH_OPTIONS = listOf(20, 25, 30, 35)
@@ -131,7 +130,6 @@ object TileThemePalette {
 
     fun getTheme(key: String?): ThemeSpec = themeMap[key] ?: THEMES.first()
 
-    // Compute relative luminance dynamically from any theme color array without hardcoded theme checks
     private fun computeAverageLuminance(colors: IntArray): Float {
         if (colors.isEmpty()) return 0f
         var sum = 0f
@@ -146,19 +144,16 @@ object TileThemePalette {
 
     fun isLightSurface(colors: IntArray): Boolean = computeAverageLuminance(colors) > 0.45f
 
-    // Derive optimal high-contrast font color mathematically from the surface's own hue & luminance
     fun getAdaptiveTextColor(colors: IntArray, secondary: Boolean = false): Int {
         val sample = colors.firstOrNull() ?: return Color.WHITE
         val hsv = FloatArray(3)
         Color.colorToHSV(sample, hsv)
         val lightBg = isLightSurface(colors)
         return if (lightBg) {
-            // Deep harmonic shade of the background's own hue for light surfaces
             hsv[1] = (hsv[1] * 0.85f).coerceIn(0.25f, 0.85f)
             hsv[2] = if (secondary) 0.32f else 0.14f
             Color.HSVToColor(if (secondary) 215 else 255, hsv)
         } else {
-            // Crisp high-luminance harmonic tint of the background's hue for dark/jewel surfaces
             hsv[1] = (hsv[1] * 0.12f).coerceIn(0f, 0.14f)
             hsv[2] = if (secondary) 0.88f else 0.99f
             Color.HSVToColor(if (secondary) 205 else 255, hsv)
