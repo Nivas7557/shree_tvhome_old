@@ -30,12 +30,13 @@ class FluidAppGrid(context: Context) : FrameLayout(context) {
         tileW = newTileW
         tileH = newTileH
 
+        val topPad = LauncherUtils.dpF(context, 8f)
+
         for (i in 0 until childCount) {
             val child = getChildAt(i)
             val row = i / columns
             val col = i % columns
 
-            val topPad = LauncherUtils.dpF(context, 10f)
             val targetX = col * (tileW + gap).toFloat()
             val targetY = topPad + row * (tileH + gap).toFloat()
 
@@ -55,7 +56,7 @@ class FluidAppGrid(context: Context) : FrameLayout(context) {
             }
         }
 
-        if (!animate && sizeChanged) requestLayout()
+        if (!animate) requestLayout()
 
         if (animate && sizeChanged) {
             ValueAnimator.ofFloat(0f, 1f).apply {
@@ -78,12 +79,34 @@ class FluidAppGrid(context: Context) : FrameLayout(context) {
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        if (childCount == 0) return
+        val w = MeasureSpec.getSize(widthMeasureSpec)
+        if (childCount == 0 || tileW <= 0 || tileH <= 0) {
+            setMeasuredDimension(w, 0)
+            return
+        }
+        val childWSpec = MeasureSpec.makeMeasureSpec(tileW, MeasureSpec.EXACTLY)
+        val childHSpec = MeasureSpec.makeMeasureSpec(tileH, MeasureSpec.EXACTLY)
+        for (i in 0 until childCount) {
+            getChildAt(i).measure(childWSpec, childHSpec)
+        }
         val rows = ceil(childCount.toDouble() / columns).toInt()
-        val extraPad = LauncherUtils.dp(context, 22)
-        val totalH = rows * tileH + maxOf(0, rows - 1) * gap + extraPad
-        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), totalH)
+        val topPad = LauncherUtils.dp(context, 8)
+        val bottomPad = LauncherUtils.dp(context, 24)
+        val totalH = topPad + rows * tileH + maxOf(0, rows - 1) * gap + bottomPad
+        setMeasuredDimension(w, totalH)
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        if (childCount == 0 || tileW <= 0 || tileH <= 0) return
+        val topPad = LauncherUtils.dp(context, 8)
+        for (i in 0 until childCount) {
+            val child = getChildAt(i)
+            val row = i / columns
+            val col = i % columns
+            val l = col * (tileW + gap)
+            val t = topPad + row * (tileH + gap)
+            child.layout(l, t, l + tileW, t + tileH)
+        }
     }
 
     override fun focusSearch(focused: View, direction: Int): View? {
@@ -96,33 +119,19 @@ class FluidAppGrid(context: Context) : FrameLayout(context) {
 
         return when (direction) {
             View.FOCUS_RIGHT -> {
-                if (col < columns - 1 && index + 1 < childCount) {
-                    getChildAt(index + 1)
-                } else {
-                    focused
-                }
+                if (col < columns - 1 && index + 1 < childCount) getChildAt(index + 1) else focused
             }
             View.FOCUS_LEFT -> {
-                if (col > 0) {
-                    getChildAt(index - 1)
-                } else {
-                    focused
-                }
+                if (col > 0) getChildAt(index - 1) else focused
             }
             View.FOCUS_DOWN -> {
                 if (row < totalRows - 1) {
                     val nextIndex = minOf(index + columns, childCount - 1)
                     getChildAt(nextIndex)
-                } else {
-                    focused
-                }
+                } else focused
             }
             View.FOCUS_UP -> {
-                if (row > 0) {
-                    getChildAt(index - columns)
-                } else {
-                    super.focusSearch(focused, direction)
-                }
+                if (row > 0) getChildAt(index - columns) else super.focusSearch(focused, direction)
             }
             else -> focused
         }
