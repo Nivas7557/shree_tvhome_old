@@ -15,6 +15,7 @@ import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import shree.tvhome.source.LauncherPreferences
+import shree.tvhome.source.LauncherPresets
 import shree.tvhome.source.LauncherUtils
 import shree.tvhome.source.TileThemePalette
 import java.util.Locale
@@ -264,6 +265,7 @@ object AppGridManager {
             }
             lastAppSignature = currentAppSig
             fluidGrid.updateGridState(targetCols, tileW, tileH, gap, animate = false)
+            LauncherPresets.animateGridEntrance(fluidGrid, lp.gridAnimStyle)
         } else {
             for (i in 0 until fluidGrid.childCount) {
                 val child = fluidGrid.getChildAt(i)
