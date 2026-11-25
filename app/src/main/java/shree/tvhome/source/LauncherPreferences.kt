@@ -2,12 +2,31 @@ package shree.tvhome.source
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.view.View
+import java.util.concurrent.CopyOnWriteArrayList
 
 class LauncherPreferences(context: Context) {
-    
-    private val styleListeners = java.util.concurrent.CopyOnWriteArrayList<() -> Unit>()
 
-    // Register lightweight listeners so existing views repaint colors naturally without recreating layouts
+    private val styleListeners = CopyOnWriteArrayList<() -> Unit>()
+
+    // Automatically attaches and detaches style listeners with the View lifecycle to prevent memory leaks
+    fun bindStyleListener(view: View, listener: () -> Unit) {
+        if (!styleListeners.contains(listener)) {
+            styleListeners.add(listener)
+        }
+        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(v: View) {
+                if (!styleListeners.contains(listener)) {
+                    styleListeners.add(listener)
+                }
+            }
+
+            override fun onViewDetachedFromWindow(v: View) {
+                styleListeners.remove(listener)
+            }
+        })
+    }
+
     fun addStyleListener(listener: () -> Unit) {
         if (!styleListeners.contains(listener)) styleListeners.add(listener)
     }
@@ -19,7 +38,7 @@ class LauncherPreferences(context: Context) {
     private fun notifyStyleChanged() {
         for (listener in styleListeners) listener()
     }
-        
+
     companion object {
         const val PREFS = "launcher_preferences"
         const val PREF_ACCENT = "accent_color"
@@ -35,7 +54,6 @@ class LauncherPreferences(context: Context) {
         const val PREF_HIDDEN_APPS = "hidden_apps_set"
         const val PREF_USER_NAME = "launcher_user_name"
         const val PREF_GREETING_PHRASE = "launcher_greeting_phrase"
-        const val PREF_SORT_ASC = "sort_ascending"
         const val PREF_SORT_ORDER = "sort_order"
         const val PREF_LIVE_WP_MODE = "live_wp_mode"
         const val PREF_PHOTO_WEATHER_AURA = "photo_weather_aura"
@@ -67,10 +85,9 @@ class LauncherPreferences(context: Context) {
         const val PREF_CUSTOM_BRIGHTNESS = "custom_brightness_pct"
         const val PREF_CUSTOM_WARMTH = "custom_warmth_pct"
 
-        // New Dynamic Upgrade Keys
+        // Dynamic UI & System Keys
         const val PREF_NAMEPLATE_MODE = "nameplate_mode"
         const val PREF_DND_ENABLED = "dnd_enabled"
-        const val PREF_SLEEP_TIMER_END_MS = "sleep_timer_end_ms"
     }
 
     val prefs: SharedPreferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -85,7 +102,7 @@ class LauncherPreferences(context: Context) {
     var accentName: String
         get() = prefs.getString(PREF_ACCENT_NAME, TileThemePalette.ACCENTS.first().label) ?: TileThemePalette.ACCENTS.first().label
         set(value) = prefs.edit().putString(PREF_ACCENT_NAME, value).apply()
-        
+
     var tileSize: String
         get() = prefs.getString(PREF_TILE_SIZE, TileThemePalette.getTileSizeSpec("medium").key)
             ?: TileThemePalette.getTileSizeSpec("medium").key
@@ -115,7 +132,6 @@ class LauncherPreferences(context: Context) {
             value.coerceIn(TileThemePalette.PANEL_WIDTH_OPTIONS.first(), TileThemePalette.PANEL_WIDTH_OPTIONS.last())
         ).apply()
 
-    // Dynamically resolve actual user-configured TV Device Name from Android Settings
     private val defaultDeviceOwner: String by lazy {
         val resolver = context.contentResolver
         val globalName = try {
@@ -138,7 +154,7 @@ class LauncherPreferences(context: Context) {
     var userName: String
         get() = prefs.getString(PREF_USER_NAME, defaultDeviceOwner) ?: defaultDeviceOwner
         set(value) = prefs.edit().putString(PREF_USER_NAME, value.ifBlank { defaultDeviceOwner }).apply()
-        
+
     var greetingPhrase: String
         get() = prefs.getString(PREF_GREETING_PHRASE, "") ?: ""
         set(value) = prefs.edit().putString(PREF_GREETING_PHRASE, value).apply()
@@ -162,7 +178,6 @@ class LauncherPreferences(context: Context) {
     var motionStyle: String
         get() = prefs.getString(PREF_MOTION_STYLE, MotionEngine.STYLES.first().key) ?: MotionEngine.STYLES.first().key
         set(value) = prefs.edit().putString(PREF_MOTION_STYLE, value).apply()
-
     var weatherCity: String
         get() = prefs.getString(PREF_WEATHER_CITY, "") ?: ""
         set(value) = prefs.edit().putString(PREF_WEATHER_CITY, value).apply()
@@ -219,10 +234,6 @@ class LauncherPreferences(context: Context) {
     var dndEnabled: Boolean
         get() = prefs.getBoolean(PREF_DND_ENABLED, false)
         set(value) = prefs.edit().putBoolean(PREF_DND_ENABLED, value).apply()
-
-    var sleepTimerEndMs: Long
-        get() = prefs.getLong(PREF_SLEEP_TIMER_END_MS, 0L)
-        set(value) = prefs.edit().putLong(PREF_SLEEP_TIMER_END_MS, value).apply()
 
     fun getOrderedFavorites(): MutableList<String> {
         val raw = prefs.getString(PREF_FAVORITES_ORDER, null)
