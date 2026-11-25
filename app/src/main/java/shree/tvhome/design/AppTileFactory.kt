@@ -166,13 +166,11 @@ object AppTileFactory {
             clipChildren = false
             setStyle(lp.accentColor, lp.tileShape, lp.tileColor, appColor)
         }
-        // Lightweight shader-only update on style change without grid re-layout
-        lp.addStyleListener {
-            if (wrapper.isAttachedToWindow) {
-                innerCard.setStyle(lp.accentColor, lp.tileShape, lp.tileColor, appColor)
-            }
-        }
 
+        // Lifecycle-bound style listener prevents memory leaks when tiles are recycled
+        lp.bindStyleListener(wrapper) {
+            innerCard.setStyle(lp.accentColor, lp.tileShape, lp.tileColor, appColor)
+        }
         val iv = ImageView(ctx).apply {
             tag = "tile_icon"
             setImageBitmap(fullBmp)
@@ -204,18 +202,12 @@ object AppTileFactory {
             else -> View.VISIBLE
         }
         unitContainer.addView(namePlate, LinearLayout.LayoutParams(-1, -2).apply {
-
             leftMargin = dp(ctx, 6)
             rightMargin = dp(ctx, 6)
             topMargin = dp(ctx, 3)
         })
 
         wrapper.addView(unitContainer, FrameLayout.LayoutParams(-1, -1, Gravity.CENTER))
-
-        wrapper.addView(badge, FrameLayout.LayoutParams(dp(ctx, 18), dp(ctx, 18), Gravity.TOP or Gravity.END).apply {
-            topMargin = dp(ctx, 2); rightMargin = dp(ctx, 8)
-        })
-        applyBadgeState(badge, lp, isFav)
 
         wrapper.setOnFocusChangeListener { v, hasFocus ->
             val dx = if (lastFocusedX >= 0f) (v.x - lastFocusedX).coerceIn(-1f, 1f) else 0f
@@ -242,7 +234,6 @@ object AppTileFactory {
                     interpolator = AccelerateDecelerateInterpolator()
                     addUpdateListener { anim ->
                         val f = anim.animatedValue as Float
-                        // Breathe only the icon card; keep the app nameplate steady and crisp
                         val iconPulse = 1.0f + (0.045f * f)
                         innerCard.scaleX = iconPulse
                         innerCard.scaleY = iconPulse
@@ -250,7 +241,7 @@ object AppTileFactory {
                     }
                     start()
                 }
-        } else {
+            } else {
                 tv.isSelected = false
                 breathingAnim?.cancel()
                 breathingAnim = null
@@ -318,7 +309,7 @@ object AppTileFactory {
             else -> View.VISIBLE
         }
     }
-}
+
     private fun nameplateBg(ctx: Context, focused: Boolean, accentColor: Int) = GradientDrawable(
         GradientDrawable.Orientation.LEFT_RIGHT,
         if (focused) intArrayOf(LauncherUtils.withAlpha(accentColor, 225), LauncherUtils.withAlpha(accentColor, 145))
@@ -332,3 +323,4 @@ object AppTileFactory {
         dp(ctx, TileThemePalette.getTileSizeSpec(tileSize).badgeDp)
 
     private fun dp(ctx: Context, v: Int) = LauncherUtils.dp(ctx, v)
+}
