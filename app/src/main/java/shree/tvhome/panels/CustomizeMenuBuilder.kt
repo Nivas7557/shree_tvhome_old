@@ -71,43 +71,58 @@ object CustomizeMenuBuilder {
     ) {
         activeSubMenuRow = null
         activeAnchorButton = null
+        PanelUiKit.enableUnclippedElevation(panel)
 
         PanelUiKit.addSectionHeader(ctx, panel, lp, "ONE-TAP MOOD PRESETS")
         val moodRow = LinearLayout(ctx).apply {
             orientation = LinearLayout.HORIZONTAL
-            clipChildren = false
-            clipToPadding = false
+            PanelUiKit.enableUnclippedElevation(this)
         }
         moodPresets.forEachIndexed { idx, preset ->
+            val iconTv = TextView(ctx).apply { text = preset.icon; textSize = 14f; gravity = Gravity.CENTER }
+            val titleTv = TextView(ctx).apply {
+                text = preset.title
+                textSize = 9.5f
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = Gravity.CENTER
+            }
             val btn = LinearLayout(ctx).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
                 setPadding(dp(ctx, 6), dp(ctx, 8), dp(ctx, 6), dp(ctx, 8))
                 isFocusable = true
                 isClickable = true
-                background = PanelUiKit.glassCardBg(ctx, lp.accentColor, false)
+
+                val syncMoodBtn = {
+                    val isActivePreset = lp.tileColor == preset.tileTheme &&
+                        lp.accentColor == TileThemePalette.getAccentByName(preset.accentKey) &&
+                        lp.motionStyle == preset.motionKey
+                    val highlighted = hasFocus() || isActivePreset
+                    background = PanelUiKit.glassCardBg(ctx, lp.accentColor, highlighted, lp.tileColor)
+                    titleTv.setTextColor(
+                        if (highlighted) TileThemePalette.getAdaptiveTextColor(intArrayOf(lp.accentColor))
+                        else TileThemePalette.getPrimaryTextColor(lp.tileColor)
+                    )
+                }
+                syncMoodBtn()
+                lp.bindStyleListener(this, syncMoodBtn)
+
                 setOnFocusChangeListener { v, f ->
                     MotionEngine.animateFocus(v, f, lp.motionStyle, 1.04f, 4f)
-                    v.background = PanelUiKit.glassCardBg(ctx, lp.accentColor, f)
+                    syncMoodBtn()
                 }
                 setOnClickListener {
-                    lp.tileColor = preset.tileTheme
-                    lp.accentColor = TileThemePalette.getAccentByName(preset.accentKey)
+                    // Apply values reactively without tearing down views so focus stays naturally on this button
                     lp.motionStyle = preset.motionKey
                     lp.prefs.edit().remove(LauncherPreferences.PREF_WALLPAPER).apply()
                     lp.liveWallpaperMode = preset.sceneKey
+                    lp.accentColor = TileThemePalette.getAccentByName(preset.accentKey)
+                    lp.tileColor = preset.tileTheme
                     onLiveRefresh()
-                    onRefreshPanel()
                     Toast.makeText(ctx, "${preset.title} Mood Applied", Toast.LENGTH_SHORT).show()
                 }
-                addView(TextView(ctx).apply { text = preset.icon; textSize = 14f; gravity = Gravity.CENTER })
-                addView(TextView(ctx).apply {
-                    text = preset.title
-                    textSize = 9.5f
-                    typeface = Typeface.DEFAULT_BOLD
-                    setTextColor(Color.WHITE)
-                    gravity = Gravity.CENTER
-                })
+                addView(iconTv)
+                addView(titleTv)
             }
             moodRow.addView(btn, LinearLayout.LayoutParams(0, -2, 1f).apply {
                 if (idx < moodPresets.lastIndex) rightMargin = dp(ctx, 6)
@@ -118,8 +133,7 @@ object CustomizeMenuBuilder {
         PanelUiKit.addSectionHeader(ctx, panel, lp, "ACCOUNT & VISIBILITY")
         val topRow = LinearLayout(ctx).apply {
             orientation = LinearLayout.HORIZONTAL
-            clipChildren = false
-            clipToPadding = false
+            PanelUiKit.enableUnclippedElevation(this)
         }
         topRow.addView(
             makeActionTile(ctx, lp, "👤 ", lp.userName, "Edit Profile & DP") { onEditProfile() },
@@ -202,28 +216,40 @@ object CustomizeMenuBuilder {
         MotionEngine.STYLES.chunked(4).forEach { rowChunk ->
             val r = LinearLayout(ctx).apply {
                 orientation = LinearLayout.HORIZONTAL
-                clipChildren = false
-                clipToPadding = false
+                PanelUiKit.enableUnclippedElevation(this)
             }
             rowChunk.forEachIndexed { idx, spec ->
-                val isSel = lp.motionStyle == spec.key
                 val btn = TextView(ctx).apply {
                     text = spec.label
                     textSize = 9.5f
                     typeface = Typeface.DEFAULT_BOLD
-                    setTextColor(Color.WHITE)
                     gravity = Gravity.CENTER
                     isFocusable = true
                     isClickable = true
-                    background = PanelUiKit.glassCardBg(ctx, lp.accentColor, isSel)
+
+                    val syncMotionBtn = {
+                        val active = hasFocus() || lp.motionStyle == spec.key
+                        background = PanelUiKit.glassCardBg(ctx, lp.accentColor, active, lp.tileColor)
+                        setTextColor(
+                            if (active) TileThemePalette.getAdaptiveTextColor(intArrayOf(lp.accentColor))
+                            else TileThemePalette.getPrimaryTextColor(lp.tileColor)
+                        )
+                    }
+                    syncMotionBtn()
+                    lp.bindStyleListener(this, syncMotionBtn)
+
                     setOnFocusChangeListener { v, f ->
                         MotionEngine.animateFocus(v, f, lp.motionStyle, 1.03f, 3f)
-                        v.background = PanelUiKit.glassCardBg(ctx, lp.accentColor, f || lp.motionStyle == spec.key)
+                        syncMotionBtn()
                     }
                     setOnClickListener {
                         lp.motionStyle = spec.key
-                        allMotionButtons.forEach { (k, b) ->
-                            b.background = PanelUiKit.glassCardBg(ctx, lp.accentColor, b.hasFocus() || k == lp.motionStyle)
+                        allMotionButtons.forEach { (_, b) ->
+                            b.background = PanelUiKit.glassCardBg(ctx, lp.accentColor, b.hasFocus() || b == this, lp.tileColor)
+                            b.setTextColor(
+                                if (b.hasFocus() || b == this) TileThemePalette.getAdaptiveTextColor(intArrayOf(lp.accentColor))
+                                else TileThemePalette.getPrimaryTextColor(lp.tileColor)
+                            )
                         }
                         val hostPanel = (panel.parent?.parent as? View) ?: panel
                         MotionEngine.playDemoPreview(hostPanel, spec.key)
@@ -236,11 +262,11 @@ object CustomizeMenuBuilder {
             }
             panel.addView(r, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 5) })
         }
-                PanelUiKit.addSectionHeader(ctx, panel, lp, "ACCENT AURA")
+
+        PanelUiKit.addSectionHeader(ctx, panel, lp, "ACCENT AURA")
         val swatchRow = LinearLayout(ctx).apply {
             orientation = LinearLayout.HORIZONTAL
-            clipChildren = false
-            clipToPadding = false
+            PanelUiKit.enableUnclippedElevation(this)
         }
         val swatchViews = ArrayList<Pair<Int, View>>()
         TileThemePalette.ACCENTS.forEachIndexed { idx, spec ->
@@ -248,10 +274,15 @@ object CustomizeMenuBuilder {
             val dot = View(ctx).apply {
                 isFocusable = true
                 isClickable = true
-                background = swatchBg(ctx, col, lp.accentColor == col)
+                val syncSwatch = {
+                    background = swatchBg(ctx, col, hasFocus() || lp.accentColor == col)
+                }
+                syncSwatch()
+                lp.bindStyleListener(this, syncSwatch)
+
                 setOnFocusChangeListener { v, f ->
                     MotionEngine.animateFocus(v, f, lp.motionStyle, 1.12f, 5f)
-                    v.background = swatchBg(ctx, col, f || lp.accentColor == col)
+                    syncSwatch()
                 }
                 setOnClickListener {
                     lp.accentColor = col
@@ -272,8 +303,7 @@ object CustomizeMenuBuilder {
         TileThemePalette.THEMES.chunked(2).forEach { rowChunk ->
             val row = LinearLayout(ctx).apply {
                 orientation = LinearLayout.HORIZONTAL
-                clipChildren = false
-                clipToPadding = false
+                PanelUiKit.enableUnclippedElevation(this)
             }
             rowChunk.forEachIndexed { idx, theme ->
                 val isSel = lp.tileColor == theme.key
