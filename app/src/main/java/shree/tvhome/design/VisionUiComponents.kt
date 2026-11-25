@@ -22,11 +22,14 @@ import android.view.ViewGroup
 import android.view.animation.LinearInterpolator
 import android.widget.FrameLayout
 import android.widget.TextView
+import shree.tvhome.source.LauncherPreferences
 import shree.tvhome.source.LauncherUtils
+import shree.tvhome.source.MotionEngine
+import shree.tvhome.source.TileThemePalette
 
 object VisionUiComponents {
 
-    // Google TV boot-style animated multi-color sweep-gradient border with transparent interior
+    // Dynamically builds multi-color sweep gradient from registered TileThemePalette accents
     class AnimatedGradientBorderDrawable(
         private val ctx: Context,
         accentColor: Int
@@ -38,18 +41,17 @@ object VisionUiComponents {
         private val rectF = RectF()
         private var angle = 0f
 
-        private val gradientColors = intArrayOf(
-            Color.rgb(66, 133, 244),   // Google Blue
-            Color.rgb(234, 67, 53),    // Crimson Coral
-            Color.rgb(251, 188, 5),    // Warm Gold
-            Color.rgb(52, 168, 83),    // Emerald Mint
-            Color.rgb(175, 92, 255),   // Neon Orchid
-            accentColor,
-            Color.rgb(66, 133, 244)    // Seamless loop wrap
-        )
+        private val gradientColors: IntArray = buildList {
+            add(accentColor)
+            TileThemePalette.ACCENTS.forEach { spec ->
+                if (spec.color != accentColor) add(spec.color)
+            }
+            add(accentColor)
+        }.toIntArray()
 
         private val animator = ValueAnimator.ofFloat(0f, 360f).apply {
-            duration = 5500L
+            val style = LauncherPreferences(ctx).motionStyle
+            duration = MotionEngine.getSpec(style).previewMs * 7L
             repeatCount = ValueAnimator.INFINITE
             interpolator = LinearInterpolator()
             addUpdateListener {
@@ -88,17 +90,17 @@ object VisionUiComponents {
             (coreBorderPaint.shader as? SweepGradient)?.setLocalMatrix(matrix)
             (glowPaint.shader as? SweepGradient)?.setLocalMatrix(matrix)
 
-            val cornerR = LauncherUtils.dpF(ctx, 26f)
-            val inset = LauncherUtils.dpF(ctx, 3f)
+            val minSide = minOf(w, h)
+            val cornerR = (minSide * 0.045f).coerceAtLeast(LauncherUtils.dpF(ctx, 14f))
+            val strokeUnit = (minSide * 0.0032f).coerceAtLeast(1.5f)
+            val inset = strokeUnit * 2.2f
             rectF.set(inset, inset, w - inset, h - inset)
 
-            // Soft outer halo glow
-            glowPaint.strokeWidth = LauncherUtils.dpF(ctx, 5.5f)
+            glowPaint.strokeWidth = strokeUnit * 3.2f
             glowPaint.alpha = 85
             canvas.drawRoundRect(rectF, cornerR, cornerR, glowPaint)
 
-            // Crisp animated gradient border line (interior stays 100% transparent)
-            coreBorderPaint.strokeWidth = LauncherUtils.dpF(ctx, 1.8f)
+            coreBorderPaint.strokeWidth = strokeUnit
             coreBorderPaint.alpha = 235
             canvas.drawRoundRect(rectF, cornerR, cornerR, coreBorderPaint)
         }
@@ -115,15 +117,15 @@ object VisionUiComponents {
         override fun getOpacity(): Int = PixelFormat.TRANSLUCENT
     }
 
-    // Apply only the animated rounding border (no interior glass fill)
     fun applySectionDeckStyle(ctx: Context, container: ViewGroup, enabled: Boolean, accentColor: Int) {
         (container.background as? AnimatedGradientBorderDrawable)?.stop()
         if (!enabled) {
             container.background = null
             return
         }
-        val padH = LauncherUtils.dp(ctx, 14)
-        val padV = LauncherUtils.dp(ctx, 10)
+        val dm = ctx.resources.displayMetrics
+        val padH = (dm.widthPixels * 0.014f).toInt()
+        val padV = (dm.heightPixels * 0.015f).toInt()
         container.setPadding(padH, padV, padH, padV)
         container.clipToPadding = true
         container.clipChildren = true
@@ -137,7 +139,6 @@ object VisionUiComponents {
         })
     }
 
-    // Pure frameless icon card: zero interior background fill, only brand-color glow on focus
     class VisionTileLayout(context: Context) : FrameLayout(context) {
         private val ambientGlowPaint = Paint(Paint.ANTI_ALIAS_FLAG)
         private val rimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
@@ -147,9 +148,9 @@ object VisionUiComponents {
 
         private var isFocusedTile = false
         private var glowAlpha = 0f
-        private var brandColor = Color.rgb(92, 184, 255)
-        private var accentColor = Color.rgb(92, 184, 255)
-        private var shapeKey = "squircle"
+        private var brandColor = TileThemePalette.ACCENTS.first().color
+        private var accentColor = TileThemePalette.ACCENTS.first().color
+        private var shapeKey = TileThemePalette.TILE_SHAPES.first().key
 
         init {
             setWillNotDraw(false)
@@ -161,7 +162,7 @@ object VisionUiComponents {
         fun setVisionStyle(accent: Int, shape: String?, dominant: Int) {
             accentColor = accent
             brandColor = dominant
-            shapeKey = shape ?: "squircle"
+            shapeKey = shape ?: TileThemePalette.TILE_SHAPES.first().key
             if (width > 0 && height > 0) rebuildPath(width.toFloat(), height.toFloat())
             invalidate()
         }
@@ -204,7 +205,7 @@ object VisionUiComponents {
                     clipPath.close()
                 }
                 else -> {
-                    val r = if (shapeKey == "classic") LauncherUtils.dpF(context, 10f) else s * 0.25f
+                    val r = if (shapeKey == "classic") s * 0.11f else s * 0.25f
                     rectF.set(left, top, right, bottom)
                     clipPath.addRoundRect(rectF, r, r, Path.Direction.CW)
                 }
@@ -219,7 +220,6 @@ object VisionUiComponents {
             val cx = w / 2f
             val cy = h / 2f
 
-            // Soft brand-color ambient underglow only when focused
             if (isFocusedTile || glowAlpha > 0.02f) {
                 val radius = maxOf(w, h) * 0.82f
                 ambientGlowPaint.shader = RadialGradient(
@@ -235,43 +235,44 @@ object VisionUiComponents {
                 canvas.drawCircle(cx, cy + h * 0.08f, radius, ambientGlowPaint)
             }
 
-            // Pure full-bleed icon without any background fill or box
             canvas.save()
             canvas.clipPath(clipPath)
             super.dispatchDraw(canvas)
             canvas.restore()
 
-            // Crisp white focus ring only when selected
             if (isFocusedTile) {
-                rimPaint.strokeWidth = LauncherUtils.dpF(context, 2.2f)
+                rimPaint.strokeWidth = (minOf(w, h) * 0.028f).coerceAtLeast(2f)
                 rimPaint.color = Color.WHITE
                 canvas.drawPath(clipPath, rimPaint)
             }
         }
     }
 
-    fun visionCardBg(ctx: Context, accent: Int, focused: Boolean) = GradientDrawable(
-        GradientDrawable.Orientation.TOP_BOTTOM,
-        if (focused) {
-            intArrayOf(Color.argb(242, 255, 255, 255), Color.argb(222, 236, 244, 255))
-        } else {
-            intArrayOf(Color.argb(46, 255, 255, 255), Color.argb(22, 255, 255, 255))
-        }
-    ).apply {
-        cornerRadius = LauncherUtils.dpF(ctx, 16f)
-        setStroke(
-            LauncherUtils.dp(ctx, if (focused) 2 else 1),
-            if (focused) accent else Color.argb(52, 255, 255, 255)
-        )
-    }
-    fun visionTrackBg(ctx: Context) = GradientDrawable().apply {
-        setColor(Color.argb(42, 0, 0, 0))
-        cornerRadius = LauncherUtils.dpF(ctx, 18f)
-        setStroke(LauncherUtils.dp(ctx, 1), Color.argb(45, 255, 255, 255))
-     }
-     fun styleFloatingLabel(ctx: Context, tv: TextView, focused: Boolean) {
-         tv.setTextColor(if (focused) Color.WHITE else Color.argb(230, 235, 242, 255))
-         tv.typeface = if (focused) Typeface.DEFAULT_BOLD else Typeface.create("sans-serif-medium", Typeface.NORMAL)
-        tv.setShadowLayer(if (focused) 10f else 5f, 0f, 2f, Color.argb(210, 0, 0, 0))
-     }
- }
+    fun visionCardBg(ctx: Context, accent: Int, focused: Boolean): GradientDrawable {
+        val baseSurface = TileThemePalette.getTheme(LauncherPreferences(ctx).tileColor).normalColors
+        val topBase = baseSurface.firstOrNull() ?: accent
+        val botBase = baseSurface.lastOrNull() ?: accent
+        val cornerR = ctx.resources.displayMetrics.heightPixels * 0.022f
+
+        return GradientDrawable(
+            GradientDrawable.Orientation.TOP_BOTTOM,
+            if (focused) {
+                intArrayOf(
+                    LauncherUtils.blendWithAccent(Color.WHITE, accent, 0.08f, 240),
+                    LauncherUtils.blendWithAccent(Color.WHITE, accent, 0.16f, 220)
+                )
+            } else {
+* 0.025f
+return GradientDrawable().apply {
+setColor(LauncherUtils.withAlpha(Color.BLACK, 44))
+cornerRadius = cornerR
+setStroke(1, LauncherUtils.withAlpha(Color.WHITE, 45))
+}
+}
+fun styleFloatingLabel(ctx: Context, tv: TextView, focused: Boolean) {
+tv.setTextColor(if (focused) Color.WHITE else LauncherUtils.withAlpha(Color.WHITE, 230))
+tv.typeface = if (focused) Typeface.DEFAULT_BOLD else Typeface.create("sans-serif-medium", Typeface.NORMAL)
+val shadowR = tv.textSize * if (focused) 0.75f else 0.4f
+tv.setShadowLayer(shadowR, 0f, shadowR * 0.25f, LauncherUtils.withAlpha(Color.BLACK, 215))
+}
+}
