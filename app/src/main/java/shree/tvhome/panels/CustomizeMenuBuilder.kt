@@ -299,7 +299,7 @@ object CustomizeMenuBuilder {
                         )
                     }
                     syncCard()
-                    lp.addStyleListener(syncCard)
+                    lp.bindStyleListener(this, syncCard)
 
                     setOnFocusChangeListener { v, f ->
                         MotionEngine.animateFocus(v, f, lp.motionStyle, 1.03f, 4f)
@@ -418,7 +418,7 @@ object CustomizeMenuBuilder {
                 )
             }
             syncColors()
-            lp.addStyleListener(syncColors)
+            lp.bindStyleListener(this, syncColors)
 
             setOnFocusChangeListener { v, f ->
                 MotionEngine.animateFocus(v, f, lp.motionStyle, 1.03f, 4f)
