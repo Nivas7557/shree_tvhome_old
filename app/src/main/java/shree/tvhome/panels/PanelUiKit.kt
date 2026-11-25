@@ -43,7 +43,7 @@ object PanelUiKit {
             )
         }
         applyColor()
-        lp.addStyleListener(applyColor)
+        lp.bindStyleListener(tv, applyColor)
         parent.addView(tv, LinearLayout.LayoutParams(-1, -2).apply {
             topMargin = dp(ctx, 10)
             bottomMargin = dp(ctx, 5)
@@ -144,7 +144,7 @@ object PanelUiKit {
             })
         }
         refreshChips()
-        lp.addStyleListener(refreshChips)
+        lp.bindStyleListener(row, refreshChips)
         parent.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 6) })
     }
     fun addGlossyPillSlider(
@@ -171,7 +171,7 @@ object PanelUiKit {
             init {
                 isFocusable = true
                 isClickable = true
-                lp.addStyleListener { invalidate() }
+                lp.bindStyleListener(this) { invalidate() }
                 setOnFocusChangeListener { v, f ->
                     isFocusedState = f
                     MotionEngine.animateFocus(v, f, lp.motionStyle, 1.02f, 5f)
@@ -316,7 +316,7 @@ object PanelUiKit {
             trailTv.setTextColor(primaryCol)
         }
         syncVisuals()
-        lp.addStyleListener(syncVisuals)
+        lp.bindStyleListener(this, syncVisuals)
 
         setOnFocusChangeListener { v, f ->
             MotionEngine.animateFocus(v, f, lp.motionStyle, 1.02f, 4f)
