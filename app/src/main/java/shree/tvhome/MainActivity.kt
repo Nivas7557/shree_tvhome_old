@@ -2,7 +2,6 @@ package shree.tvhome
 
 import android.animation.LayoutTransition
 import android.animation.ValueAnimator
-import android.Manifest
 import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -99,7 +98,7 @@ class MainActivity : Activity() {
             val preset = shree.tvhome.panels.SystemSubPanels.PICTURE_MODES.find { it.key == lp.pictureMode }
             if (preset != null) shree.tvhome.panels.SystemSubPanels.applyWarmTintOverlay(this, preset.warmth)
         }
-        
+
         NightNudgeReceiver.scheduleNextNudge(this)
 
         val filter = IntentFilter().apply {
@@ -126,6 +125,7 @@ class MainActivity : Activity() {
         super.onDestroy()
         try { unregisterReceiver(pkgReceiver) } catch (_: Exception) {}
         try { unregisterReceiver(ambientReceiver) } catch (_: Exception) {}
+    }
 
     override fun onResume() {
         super.onResume()
@@ -188,7 +188,6 @@ class MainActivity : Activity() {
         }
         return super.dispatchKeyEvent(event)
     }
-
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(req: Int, res: Int, data: Intent?) {
         @Suppress("DEPRECATION")
@@ -240,7 +239,7 @@ class MainActivity : Activity() {
             }
         }
     }
-    
+
     private fun openImagePicker(requestCode: Int) {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE); type = "image/*"
@@ -380,18 +379,14 @@ class MainActivity : Activity() {
             topMargin = dp(52)
         }
         rootLayout.addView(nudgeView, nudgeParams)
-        
-        // Position nudge bubble dynamically after TopNavBar measures its profile card width
         topNavBar.post {
             val profileGroup = topNavBar.getChildAt(1)
-            nudgeParams.leftMargin = (profileGroup?.right ?: dp(180)) + dp(12)
-            nudgeView.requestLayout()
-        }
+                nudgeParams.leftMargin = (profileGroup?.right ?: dp(180)) + dp(12)
+                nudgeView.requestLayout()
+                }
         setContentView(rootLayout)
-        // Request focus on the first app tile when launcher starts fresh
         syncAppGrid(allowFocusRestore = true)
     }
-
     private fun openHiddenRibbon() {
         AppGridManager.populateHiddenRibbon(this, lp, hiddenSection, hiddenRow, hiddenCount) { pkg, label ->
             val updated = lp.getHiddenApps().apply { remove(pkg) }
