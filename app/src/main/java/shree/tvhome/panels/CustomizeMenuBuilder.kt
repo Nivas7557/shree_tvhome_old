@@ -14,28 +14,13 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import shree.tvhome.source.LauncherBackground
 import shree.tvhome.source.LauncherPreferences
+import shree.tvhome.source.LauncherPresets
 import shree.tvhome.source.LauncherUtils
 import shree.tvhome.source.MotionEngine
 import shree.tvhome.source.TileThemePalette
 
 object CustomizeMenuBuilder {
-
-    private data class MoodPresetSpec(
-        val icon: String,
-        val title: String,
-        val tileTheme: String,
-        val accentKey: String,
-        val motionKey: String,
-        val sceneKey: String
-    )
-
-    private val moodPresets = listOf(
-        MoodPresetSpec("🎬", "Cinema", "dark", "sunset", "silk", LauncherBackground.MODE_SUNSET),
-        MoodPresetSpec("⚡", "Cyber", "cyber", "magenta", "jelly", LauncherBackground.MODE_PASTEL),
-        MoodPresetSpec("💎", "Crystal", "crystal", "royal", "levitate", LauncherBackground.MODE_MORNING)
-    )
 
     private var activeSubMenuRow: LinearLayout? = null
     private var activeAnchorButton: View? = null
@@ -78,26 +63,24 @@ object CustomizeMenuBuilder {
             orientation = LinearLayout.HORIZONTAL
             PanelUiKit.enableUnclippedElevation(this)
         }
-        moodPresets.forEachIndexed { idx, preset ->
-            val iconTv = TextView(ctx).apply { text = preset.icon; textSize = 14f; gravity = Gravity.CENTER }
+        LauncherPresets.MOOD_PRESETS.forEachIndexed { idx, preset ->
+            val iconTv = TextView(ctx).apply { text = preset.icon; textSize = 13f; gravity = Gravity.CENTER }
             val titleTv = TextView(ctx).apply {
                 text = preset.title
-                textSize = 9.5f
+                textSize = 8.8f
                 typeface = Typeface.DEFAULT_BOLD
                 gravity = Gravity.CENTER
+                isSingleLine = true
             }
             val btn = LinearLayout(ctx).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
-                setPadding(dp(ctx, 6), dp(ctx, 8), dp(ctx, 6), dp(ctx, 8))
+                setPadding(dp(ctx, 4), dp(ctx, 7), dp(ctx, 4), dp(ctx, 7))
                 isFocusable = true
                 isClickable = true
 
                 val syncMoodBtn = {
-                    val isActivePreset = lp.tileColor == preset.tileTheme &&
-                        lp.accentColor == TileThemePalette.getAccentByName(preset.accentKey) &&
-                        lp.motionStyle == preset.motionKey
-                    val highlighted = hasFocus() || isActivePreset
+                    val highlighted = hasFocus() || LauncherPresets.isPresetActive(lp, preset)
                     background = PanelUiKit.glassCardBg(ctx, lp.accentColor, highlighted, lp.tileColor)
                     titleTv.setTextColor(
                         if (highlighted) TileThemePalette.getAdaptiveTextColor(intArrayOf(lp.accentColor))
@@ -112,12 +95,7 @@ object CustomizeMenuBuilder {
                     syncMoodBtn()
                 }
                 setOnClickListener {
-                    // Apply values reactively without tearing down views so focus stays naturally on this button
-                    lp.motionStyle = preset.motionKey
-                    lp.prefs.edit().remove(LauncherPreferences.PREF_WALLPAPER).apply()
-                    lp.liveWallpaperMode = preset.sceneKey
-                    lp.accentColor = TileThemePalette.getAccentByName(preset.accentKey)
-                    lp.tileColor = preset.tileTheme
+                    LauncherPresets.applyMoodPreset(lp, preset)
                     onLiveRefresh()
                     Toast.makeText(ctx, "${preset.title} Mood Applied", Toast.LENGTH_SHORT).show()
                 }
@@ -125,7 +103,7 @@ object CustomizeMenuBuilder {
                 addView(titleTv)
             }
             moodRow.addView(btn, LinearLayout.LayoutParams(0, -2, 1f).apply {
-                if (idx < moodPresets.lastIndex) rightMargin = dp(ctx, 6)
+                if (idx < LauncherPresets.MOOD_PRESETS.lastIndex) rightMargin = dp(ctx, 4)
             })
         }
         panel.addView(moodRow, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 6) })
@@ -167,6 +145,29 @@ object CustomizeMenuBuilder {
             },
             LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 4) }
         )
+
+        PanelUiKit.addSectionHeader(ctx, panel, lp, "HOME GRID LAYOUT")
+        PanelUiKit.addSegmentedTrack(
+            ctx, panel, lp,
+            options = TileThemePalette.GRID_LAYOUT_MODES.map { it.key to it.label },
+            getSelected = { lp.gridLayoutMode },
+            onSelect = { key ->
+                lp.gridLayoutMode = key
+                onLiveRefresh()
+            }
+        )
+
+        PanelUiKit.addSectionHeader(ctx, panel, lp, "APP GRID ANIMATION")
+        PanelUiKit.addSegmentedTrack(
+            ctx, panel, lp,
+            options = LauncherPresets.GRID_ANIMATIONS.map { it.key to it.label },
+            getSelected = { lp.gridAnimStyle },
+            onSelect = { key ->
+                lp.gridAnimStyle = key
+                onLiveRefresh()
+            }
+        )
+
         PanelUiKit.addSectionHeader(ctx, panel, lp, "APP NAMEPLATES")
         PanelUiKit.addSegmentedTrack(
             ctx, panel, lp,
@@ -177,7 +178,6 @@ object CustomizeMenuBuilder {
                 onLiveRefresh()
             }
         )
-
         PanelUiKit.addSectionHeader(ctx, panel, lp, "TILE SIZE")
         PanelUiKit.addSegmentedTrack(
             ctx, panel, lp,
@@ -389,7 +389,7 @@ object CustomizeMenuBuilder {
         }
         box.addView(input, LinearLayout.LayoutParams(dp(ctx, 310), -2))
         val btnRow = LinearLayout(ctx).apply { orientation = LinearLayout.HORIZONTAL }
-        btnRow.addView(
+                btnRow.addView(
             PanelUiKit.makeActionRow(ctx, lp, "↺", "Auto Reset", "Time-based", "") {
                 lp.greetingPhrase = ""
                 onSaved()
