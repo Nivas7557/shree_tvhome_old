@@ -69,6 +69,12 @@ class MainActivity : Activity() {
         }
     }
 
+    private val ambientReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            toggleAmbientScreensaver(true)
+        }
+    }
+
     override fun attachBaseContext(newBase: Context) {
         val config = Configuration(newBase.resources.configuration)
         config.fontScale = LauncherUtils.calculateAdaptiveScale(newBase)
@@ -109,11 +115,6 @@ class MainActivity : Activity() {
         }
 
         val ambientFilter = IntentFilter("shree.tvhome.ACTION_ENTER_AMBIENT")
-        val ambientReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                toggleAmbientScreensaver(true)
-            }
-        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(ambientReceiver, ambientFilter, RECEIVER_NOT_EXPORTED)
         } else {
@@ -124,7 +125,7 @@ class MainActivity : Activity() {
     override fun onDestroy() {
         super.onDestroy()
         try { unregisterReceiver(pkgReceiver) } catch (_: Exception) {}
-    }
+        try { unregisterReceiver(ambientReceiver) } catch (_: Exception) {}
 
     override fun onResume() {
         super.onResume()
