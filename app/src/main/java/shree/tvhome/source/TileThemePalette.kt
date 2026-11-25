@@ -114,13 +114,6 @@ object TileThemePalette {
         OptionSpec("classic", "■ Classic")
     )
 
-    val BADGE_MODES = listOf(
-        OptionSpec("accent", "● Dot"),
-        OptionSpec("heart", "♥ Heart"),
-        OptionSpec("star", "★ Star"),
-        OptionSpec("none", "Off")
-    )
-
     val PANEL_WIDTH_OPTIONS = listOf(20, 25, 30, 35)
     const val PANEL_MIN_WIDTH_DP = 165
     val GRID_COL_RANGE = 3..8
