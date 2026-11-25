@@ -158,42 +158,58 @@ object AppTileFactory {
             clipToPadding = false
         }
 
-        val iconBadgeSize = getIconBadgeSizePx(ctx, lp.tileSize)
-        val innerCard = GlowTileLayout(ctx).apply {
+        val isVision = lp.uiDesignMode == "vision"
+        val iconBadgeSize = if (isVision) (getIconBadgeSizePx(ctx, lp.tileSize) * 1.12f).toInt() else getIconBadgeSizePx(ctx, lp.tileSize)
+
+        val visionCard = if (isVision) VisionUiComponents.VisionTileLayout(ctx).apply {
+            tag = "vision_card"
+            setVisionStyle(lp.accentColor, lp.tileShape, appColor)
+        } else null
+
+        val classicCard = if (!isVision) GlowTileLayout(ctx).apply {
             tag = "glow_card"
             isFocusable = false
             isClickable = false
             clipChildren = false
             setStyle(lp.accentColor, lp.tileShape, lp.tileColor, appColor)
+        } else null
+
+        val activeCard: FrameLayout = visionCard ?: classicCard!!
+
+        lp.bindStyleListener(wrapper) {
+            visionCard?.setVisionStyle(lp.accentColor, lp.tileShape, appColor)
+            classicCard?.setStyle(lp.accentColor, lp.tileShape, lp.tileColor, appColor)
         }
 
-        // Lifecycle-bound style listener prevents memory leaks when tiles are recycled
-        lp.bindStyleListener(wrapper) {
-            innerCard.setStyle(lp.accentColor, lp.tileShape, lp.tileColor, appColor)
-        }
         val iv = ImageView(ctx).apply {
             tag = "tile_icon"
             setImageBitmap(fullBmp)
             scaleType = ImageView.ScaleType.CENTER_CROP
         }
-        innerCard.addView(iv, FrameLayout.LayoutParams(-1, -1))
-        unitContainer.addView(innerCard, LinearLayout.LayoutParams(iconBadgeSize, iconBadgeSize))
+        activeCard.addView(iv, FrameLayout.LayoutParams(-1, -1))
+        unitContainer.addView(activeCard, LinearLayout.LayoutParams(iconBadgeSize, iconBadgeSize))
 
         val namePlate = FrameLayout(ctx).apply {
             tag = "name_plate"
             outlineProvider = null
-            setPadding(dp(ctx, 8), dp(ctx, 3), dp(ctx, 8), dp(ctx, 3))
-            background = nameplateBg(ctx, false, appColor)
+            if (isVision) {
+                setPadding(dp(ctx, 2), dp(ctx, 4), dp(ctx, 2), 0)
+                background = null
+            } else {
+                setPadding(dp(ctx, 8), dp(ctx, 3), dp(ctx, 8), dp(ctx, 3))
+                background = nameplateBg(ctx, false, appColor)
+            }
         }
         val tv = TextView(ctx).apply {
             tag = "tile_label"
             text = label
-            textSize = if (lp.columns > 6) 9f else 10.2f
+            textSize = if (lp.columns > 6) 9.5f else 10.8f
             setTextColor(Color.WHITE)
             typeface = Typeface.DEFAULT_BOLD
             isSingleLine = true
             ellipsize = TextUtils.TruncateAt.END
             gravity = Gravity.CENTER
+            if (isVision) VisionUiComponents.styleFloatingLabel(ctx, this, false)
         }
         namePlate.addView(tv, FrameLayout.LayoutParams(-1, -2, Gravity.CENTER))
         namePlate.visibility = when (lp.nameplateMode) {
@@ -202,9 +218,9 @@ object AppTileFactory {
             else -> View.VISIBLE
         }
         unitContainer.addView(namePlate, LinearLayout.LayoutParams(-1, -2).apply {
-            leftMargin = dp(ctx, 6)
-            rightMargin = dp(ctx, 6)
-            topMargin = dp(ctx, 3)
+            leftMargin = dp(ctx, 4)
+            rightMargin = dp(ctx, 4)
+            topMargin = dp(ctx, if (isVision) 5 else 3)
         })
 
         wrapper.addView(unitContainer, FrameLayout.LayoutParams(-1, -1, Gravity.CENTER))
@@ -217,12 +233,17 @@ object AppTileFactory {
                 lastFocusedY = v.y
             }
 
-            innerCard.setFocusState(hasFocus)
-            namePlate.background = nameplateBg(ctx, hasFocus, appColor)
+            visionCard?.setVisionFocus(hasFocus)
+            classicCard?.setFocusState(hasFocus)
+            if (isVision) {
+                VisionUiComponents.styleFloatingLabel(ctx, tv, hasFocus)
+            } else {
+                namePlate.background = nameplateBg(ctx, hasFocus, appColor)
+            }
             if (lp.nameplateMode == "focus") {
                 namePlate.visibility = if (hasFocus) View.VISIBLE else View.INVISIBLE
             }
-            MotionEngine.animateFocus(unitContainer, hasFocus, lp.motionStyle, 1.11f, 12f, dx, dy)
+            MotionEngine.animateFocus(unitContainer, hasFocus, lp.motionStyle, if (isVision) 1.13f else 1.11f, 12f, dx, dy)
 
             if (hasFocus) {
                 tv.isSelected = true
@@ -234,10 +255,11 @@ object AppTileFactory {
                     interpolator = AccelerateDecelerateInterpolator()
                     addUpdateListener { anim ->
                         val f = anim.animatedValue as Float
-                        val iconPulse = 1.0f + (0.045f * f)
-                        innerCard.scaleX = iconPulse
-                        innerCard.scaleY = iconPulse
-                        innerCard.updateGlowPulse(f)
+                        val iconPulse = 1.0f + (0.04f * f)
+                        activeCard.scaleX = iconPulse
+                        activeCard.scaleY = iconPulse
+                        visionCard?.setVisionPulse(f)
+                        classicCard?.updateGlowPulse(f)
                     }
                     start()
                 }
@@ -245,7 +267,7 @@ object AppTileFactory {
                 tv.isSelected = false
                 breathingAnim?.cancel()
                 breathingAnim = null
-                innerCard.animate().scaleX(1f).scaleY(1f).setDuration(220L).start()
+                activeCard.animate().scaleX(1f).scaleY(1f).setDuration(220L).start()
             }
         }
 
