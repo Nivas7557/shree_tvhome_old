@@ -202,12 +202,18 @@ object AppGridManager {
         val rightStageW = maxOf(minStageW, (screenW * (lp.panelWidthPct / 100f)).toInt())
         val currentAvailableW = maxOf(dp(ctx, 200), screenW - sidePad - rightStageW - dp(ctx, 6))
 
+        val isVision = lp.uiDesignMode == "vision"
+        (appGrid.parent?.parent as? android.view.ViewGroup)?.let { exteriorDeck ->
+            VisionUiComponents.applySectionDeckStyle(ctx, exteriorDeck, isVision, lp.accentColor)
+        }
+
+        val effectiveGap = if (isVision) maxOf(gap, dp(ctx, 14)) else gap
         val desiredTilePx = dp(ctx, sizeSpec.desiredGridDp)
         val colRange = TileThemePalette.GRID_COL_RANGE
-        val targetCols = ((currentAvailableW + gap) / (desiredTilePx + gap)).coerceIn(colRange.first, colRange.last)
-        val cellW = maxOf(1, (currentAvailableW - (gap * (targetCols - 1))) / targetCols)
+        val targetCols = ((currentAvailableW + effectiveGap) / (desiredTilePx + effectiveGap)).coerceIn(colRange.first, colRange.last)
+        val cellW = maxOf(1, (currentAvailableW - (effectiveGap * (targetCols - 1))) / targetCols)
         val tileW = maxOf(1, (cellW * 0.94f).toInt())
-        val extraNameplateH = LauncherUtils.dp(ctx, 28)
+        val extraNameplateH = LauncherUtils.dp(ctx, if (isVision) 30 else 28)
         val tileH = maxOf(1, (tileW * 0.86f).toInt() + extraNameplateH)
         val sideMargin = maxOf(0, (cellW - tileW) / 2)
 
@@ -264,8 +270,9 @@ object AppGridManager {
                 )
             }
             lastAppSignature = currentAppSig
-            fluidGrid.updateGridState(targetCols, tileW, tileH, gap, animate = false)
+            fluidGrid.updateGridState(targetCols, tileW, tileH, effectiveGap, animate = false)
             LauncherPresets.animateGridEntrance(fluidGrid, lp.gridAnimStyle)
+
         } else {
             for (i in 0 until fluidGrid.childCount) {
                 val child = fluidGrid.getChildAt(i)
@@ -287,7 +294,7 @@ object AppGridManager {
                     }
                 }
             }
-            fluidGrid.updateGridState(targetCols, tileW, tileH, gap, animate = true)
+            fluidGrid.updateGridState(targetCols, tileW, tileH, effectiveGap, animate = true)
         }
 
         // Mark the first app tile as default-focused so Android TV naturally starts focus in the app drawer
