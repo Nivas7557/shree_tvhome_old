@@ -320,16 +320,6 @@ object CustomizeMenuBuilder {
             }
             panel.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 5) })
         }
-        PanelUiKit.addSectionHeader(ctx, panel, lp, "FAVORITE BADGE")
-        PanelUiKit.addSegmentedTrack(
-            ctx, panel, lp,
-            options = TileThemePalette.BADGE_MODES.map { it.key to it.label },
-            getSelected = { lp.badgeMode },
-            onSelect = { key ->
-                lp.badgeMode = key
-                onLiveRefresh()
-            }
-        )
     }
 
     private fun showGreetingDialog(ctx: Context, lp: LauncherPreferences, onSaved: () -> Unit) {
