@@ -2,12 +2,30 @@ package shree.tvhome.source
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.view.View
+import java.util.concurrent.CopyOnWriteArrayList
 
 class LauncherPreferences(context: Context) {
-    
-    private val styleListeners = java.util.concurrent.CopyOnWriteArrayList<() -> Unit>()
 
-    // Register lightweight listeners so existing views repaint colors naturally without recreating layouts
+    private val styleListeners = CopyOnWriteArrayList<() -> Unit>()
+
+    fun bindStyleListener(view: View, listener: () -> Unit) {
+        if (!styleListeners.contains(listener)) {
+            styleListeners.add(listener)
+        }
+        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(v: View) {
+                if (!styleListeners.contains(listener)) {
+                    styleListeners.add(listener)
+                }
+            }
+
+            override fun onViewDetachedFromWindow(v: View) {
+                styleListeners.remove(listener)
+            }
+        })
+    }
+
     fun addStyleListener(listener: () -> Unit) {
         if (!styleListeners.contains(listener)) styleListeners.add(listener)
     }
@@ -19,7 +37,7 @@ class LauncherPreferences(context: Context) {
     private fun notifyStyleChanged() {
         for (listener in styleListeners) listener()
     }
-        
+
     companion object {
         const val PREFS = "launcher_preferences"
         const val PREF_ACCENT = "accent_color"
@@ -27,8 +45,9 @@ class LauncherPreferences(context: Context) {
         const val PREF_TILE_SIZE = "tile_size"
         const val PREF_TILE_SHAPE = "tile_shape"
         const val PREF_TILE_COLOR = "tile_color"
-        const val PREF_BADGE = "icon_badge"
         const val PREF_COLUMNS = "grid_columns"
+        const val PREF_GRID_LAYOUT = "grid_layout_mode"
+        const val PREF_GRID_ANIM = "grid_anim_style"
         const val PREF_PANEL_WIDTH = "panel_width_pct"
         const val PREF_WALLPAPER = "custom_wallpaper_uri"
         const val PREF_FAVORITES = "favorites"
@@ -36,7 +55,6 @@ class LauncherPreferences(context: Context) {
         const val PREF_HIDDEN_APPS = "hidden_apps_set"
         const val PREF_USER_NAME = "launcher_user_name"
         const val PREF_GREETING_PHRASE = "launcher_greeting_phrase"
-        const val PREF_SORT_ASC = "sort_ascending"
         const val PREF_SORT_ORDER = "sort_order"
         const val PREF_LIVE_WP_MODE = "live_wp_mode"
         const val PREF_PHOTO_WEATHER_AURA = "photo_weather_aura"
@@ -68,10 +86,9 @@ class LauncherPreferences(context: Context) {
         const val PREF_CUSTOM_BRIGHTNESS = "custom_brightness_pct"
         const val PREF_CUSTOM_WARMTH = "custom_warmth_pct"
 
-        // New Dynamic Upgrade Keys
+        // Dynamic UI & System Keys
         const val PREF_NAMEPLATE_MODE = "nameplate_mode"
         const val PREF_DND_ENABLED = "dnd_enabled"
-        const val PREF_SLEEP_TIMER_END_MS = "sleep_timer_end_ms"
     }
 
     val prefs: SharedPreferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -86,7 +103,7 @@ class LauncherPreferences(context: Context) {
     var accentName: String
         get() = prefs.getString(PREF_ACCENT_NAME, TileThemePalette.ACCENTS.first().label) ?: TileThemePalette.ACCENTS.first().label
         set(value) = prefs.edit().putString(PREF_ACCENT_NAME, value).apply()
-        
+
     var tileSize: String
         get() = prefs.getString(PREF_TILE_SIZE, TileThemePalette.getTileSizeSpec("medium").key)
             ?: TileThemePalette.getTileSizeSpec("medium").key
@@ -104,14 +121,19 @@ class LauncherPreferences(context: Context) {
             notifyStyleChanged()
         }
 
-    var badgeMode: String
-        get() = prefs.getString(PREF_BADGE, TileThemePalette.BADGE_MODES.first().key)
-            ?: TileThemePalette.BADGE_MODES.first().key
-        set(value) = prefs.edit().putString(PREF_BADGE, value).apply()
-
     var columns: Int
         get() = prefs.getInt(PREF_COLUMNS, 6).coerceIn(TileThemePalette.GRID_COL_RANGE)
         set(value) = prefs.edit().putInt(PREF_COLUMNS, value.coerceIn(TileThemePalette.GRID_COL_RANGE)).apply()
+
+    var gridLayoutMode: String
+        get() = prefs.getString(PREF_GRID_LAYOUT, TileThemePalette.GRID_LAYOUT_MODES.first().key)
+            ?: TileThemePalette.GRID_LAYOUT_MODES.first().key
+        set(value) = prefs.edit().putString(PREF_GRID_LAYOUT, value).apply()
+
+    var gridAnimStyle: String
+        get() = prefs.getString(PREF_GRID_ANIM, LauncherPresets.GRID_ANIMATIONS.first().key)
+            ?: LauncherPresets.GRID_ANIMATIONS.first().key
+        set(value) = prefs.edit().putString(PREF_GRID_ANIM, value).apply()
 
     var panelWidthPct: Int
         get() = prefs.getInt(PREF_PANEL_WIDTH, TileThemePalette.PANEL_WIDTH_OPTIONS.getOrElse(1) { TileThemePalette.PANEL_WIDTH_OPTIONS.first() })
@@ -120,8 +142,6 @@ class LauncherPreferences(context: Context) {
             PREF_PANEL_WIDTH,
             value.coerceIn(TileThemePalette.PANEL_WIDTH_OPTIONS.first(), TileThemePalette.PANEL_WIDTH_OPTIONS.last())
         ).apply()
-
-    // Dynamically resolve actual user-configured TV Device Name from Android Settings
     private val defaultDeviceOwner: String by lazy {
         val resolver = context.contentResolver
         val globalName = try {
@@ -144,7 +164,7 @@ class LauncherPreferences(context: Context) {
     var userName: String
         get() = prefs.getString(PREF_USER_NAME, defaultDeviceOwner) ?: defaultDeviceOwner
         set(value) = prefs.edit().putString(PREF_USER_NAME, value.ifBlank { defaultDeviceOwner }).apply()
-        
+
     var greetingPhrase: String
         get() = prefs.getString(PREF_GREETING_PHRASE, "") ?: ""
         set(value) = prefs.edit().putString(PREF_GREETING_PHRASE, value).apply()
@@ -217,7 +237,6 @@ class LauncherPreferences(context: Context) {
         get() = prefs.getInt(PREF_CUSTOM_WARMTH, 0).coerceIn(0, 75)
         set(value) = prefs.edit().putInt(PREF_CUSTOM_WARMTH, value.coerceIn(0, 75)).apply()
 
-    // Nameplate modes: "always", "focus", "hidden"
     var nameplateMode: String
         get() = prefs.getString(PREF_NAMEPLATE_MODE, "always") ?: "always"
         set(value) = prefs.edit().putString(PREF_NAMEPLATE_MODE, value).apply()
@@ -225,10 +244,6 @@ class LauncherPreferences(context: Context) {
     var dndEnabled: Boolean
         get() = prefs.getBoolean(PREF_DND_ENABLED, false)
         set(value) = prefs.edit().putBoolean(PREF_DND_ENABLED, value).apply()
-
-    var sleepTimerEndMs: Long
-        get() = prefs.getLong(PREF_SLEEP_TIMER_END_MS, 0L)
-        set(value) = prefs.edit().putLong(PREF_SLEEP_TIMER_END_MS, value).apply()
 
     fun getOrderedFavorites(): MutableList<String> {
         val raw = prefs.getString(PREF_FAVORITES_ORDER, null)
