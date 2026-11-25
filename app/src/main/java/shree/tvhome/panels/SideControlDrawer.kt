@@ -271,19 +271,18 @@ class SideControlDrawer(
         val divider = View(context).apply { setBackgroundColor(Color.argb(60, 255, 255, 255)) }
         drawerLayout.addView(divider, LinearLayout.LayoutParams(-1, dp(1f)).apply { bottomMargin = dp(8f) })
 
+        val safePad = dp(PanelUiKit.PANEL_SAFE_PAD_DP.toFloat())
         activeScroll = ScrollView(context).apply {
             isVerticalScrollBarEnabled = false
             overScrollMode = View.OVER_SCROLL_NEVER
             isFillViewport = true
-            clipChildren = true
-            clipToPadding = true
-            setPadding(0, dp(2f), 0, dp(2f))
+            PanelUiKit.enableUnclippedElevation(this)
+            setPadding(0, safePad, 0, safePad)
         }
         activePanel = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
-            clipChildren = true
-            clipToPadding = true
-            setPadding(dp(6f), dp(6f), dp(6f), dp(20f))
+            PanelUiKit.enableUnclippedElevation(this)
+            setPadding(safePad, safePad, safePad, dp(24f))
         }
         drawerLayout.addView(activeScroll, LinearLayout.LayoutParams(-1, 0, 1f))
         activeScroll?.addView(activePanel)
