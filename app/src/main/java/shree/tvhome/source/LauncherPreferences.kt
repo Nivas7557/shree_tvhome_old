@@ -103,11 +103,6 @@ class LauncherPreferences(context: Context) {
             notifyStyleChanged()
         }
 
-    var badgeMode: String
-        get() = prefs.getString(PREF_BADGE, TileThemePalette.BADGE_MODES.first().key)
-            ?: TileThemePalette.BADGE_MODES.first().key
-        set(value) = prefs.edit().putString(PREF_BADGE, value).apply()
-
     var columns: Int
         get() = prefs.getInt(PREF_COLUMNS, 6).coerceIn(TileThemePalette.GRID_COL_RANGE)
         set(value) = prefs.edit().putInt(PREF_COLUMNS, value.coerceIn(TileThemePalette.GRID_COL_RANGE)).apply()
