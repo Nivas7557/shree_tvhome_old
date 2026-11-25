@@ -27,7 +27,6 @@ class LauncherPreferences(context: Context) {
         const val PREF_TILE_SIZE = "tile_size"
         const val PREF_TILE_SHAPE = "tile_shape"
         const val PREF_TILE_COLOR = "tile_color"
-        const val PREF_BADGE = "icon_badge"
         const val PREF_COLUMNS = "grid_columns"
         const val PREF_PANEL_WIDTH = "panel_width_pct"
         const val PREF_WALLPAPER = "custom_wallpaper_uri"
