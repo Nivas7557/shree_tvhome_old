@@ -122,9 +122,11 @@ object VisionUiComponents {
             container.background = null
             return
         }
-        val padH = LauncherUtils.dp(ctx, 16)
-        val padV = LauncherUtils.dp(ctx, 12)
+        val padH = LauncherUtils.dp(ctx, 14)
+        val padV = LauncherUtils.dp(ctx, 10)
         container.setPadding(padH, padV, padH, padV)
+        container.clipToPadding = true
+        container.clipChildren = true
 
         val borderDrawable = AnimatedGradientBorderDrawable(ctx, accentColor)
         container.background = borderDrawable
