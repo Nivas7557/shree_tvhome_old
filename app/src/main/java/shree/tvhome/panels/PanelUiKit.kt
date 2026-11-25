@@ -15,6 +15,7 @@ import android.view.Gravity
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import shree.tvhome.source.LauncherPreferences
@@ -24,6 +25,14 @@ import shree.tvhome.source.TileThemePalette
 import java.util.Locale
 
 object PanelUiKit {
+
+    // Single source of truth for panel breathing room so elevated/scaled focus cards never clip
+    const val PANEL_SAFE_PAD_DP = 10
+
+    fun enableUnclippedElevation(group: ViewGroup) {
+        group.clipChildren = false
+        group.clipToPadding = false
+    }
 
     fun addSectionHeader(ctx: Context, parent: LinearLayout, lp: LauncherPreferences, label: String) {
         val tv = TextView(ctx).apply {
@@ -85,8 +94,7 @@ object PanelUiKit {
         val row = LinearLayout(ctx).apply {
             orientation = LinearLayout.HORIZONTAL
             setPadding(dp(ctx, 3), dp(ctx, 3), dp(ctx, 3), dp(ctx, 3))
-            clipChildren = false
-            clipToPadding = false
+            enableUnclippedElevation(this)
         }
 
         val buttons = ArrayList<Pair<String, TextView>>()
@@ -281,6 +289,7 @@ object PanelUiKit {
         setPadding(dp(ctx, 12), dp(ctx, 9), dp(ctx, 12), dp(ctx, 9))
         isFocusable = true
         isClickable = true
+        enableUnclippedElevation(this)
 
         val iconTv = TextView(ctx).apply {
             text = icon
