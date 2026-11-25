@@ -254,25 +254,40 @@ object VisionUiComponents {
         val botBase = baseSurface.lastOrNull() ?: accent
         val cornerR = ctx.resources.displayMetrics.heightPixels * 0.022f
 
-        return GradientDrawable(
-            GradientDrawable.Orientation.TOP_BOTTOM,
-            if (focused) {
-                intArrayOf(
-                    LauncherUtils.blendWithAccent(Color.WHITE, accent, 0.08f, 240),
-                    LauncherUtils.blendWithAccent(Color.WHITE, accent, 0.16f, 220)
-                )
-            } else {
-* 0.025f
-return GradientDrawable().apply {
-setColor(LauncherUtils.withAlpha(Color.BLACK, 44))
-cornerRadius = cornerR
-setStroke(1, LauncherUtils.withAlpha(Color.WHITE, 45))
-}
-}
-fun styleFloatingLabel(ctx: Context, tv: TextView, focused: Boolean) {
-tv.setTextColor(if (focused) Color.WHITE else LauncherUtils.withAlpha(Color.WHITE, 230))
-tv.typeface = if (focused) Typeface.DEFAULT_BOLD else Typeface.create("sans-serif-medium", Typeface.NORMAL)
-val shadowR = tv.textSize * if (focused) 0.75f else 0.4f
-tv.setShadowLayer(shadowR, 0f, shadowR * 0.25f, LauncherUtils.withAlpha(Color.BLACK, 215))
-}
+        val colors = if (focused) {
+            intArrayOf(
+                LauncherUtils.blendWithAccent(Color.WHITE, accent, 0.08f, 240),
+                LauncherUtils.blendWithAccent(Color.WHITE, accent, 0.16f, 220)
+            )
+        } else {
+            intArrayOf(
+                LauncherUtils.withAlpha(topBase, 56),
+                LauncherUtils.withAlpha(botBase, 32)
+            )
+        }
+
+        return GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, colors).apply {
+            cornerRadius = cornerR
+            setStroke(
+                if (focused) LauncherUtils.dp(ctx, 2) else 1,
+                if (focused) accent else LauncherUtils.withAlpha(Color.WHITE, 55)
+            )
+        }
+    }
+
+    fun visionTrackBg(ctx: Context): GradientDrawable {
+        val cornerR = ctx.resources.displayMetrics.heightPixels * 0.025f
+        return GradientDrawable().apply {
+            setColor(LauncherUtils.withAlpha(Color.BLACK, 44))
+            cornerRadius = cornerR
+            setStroke(1, LauncherUtils.withAlpha(Color.WHITE, 45))
+        }
+    }
+
+    fun styleFloatingLabel(ctx: Context, tv: TextView, focused: Boolean) {
+        tv.setTextColor(if (focused) Color.WHITE else LauncherUtils.withAlpha(Color.WHITE, 230))
+        tv.typeface = if (focused) Typeface.DEFAULT_BOLD else Typeface.create("sans-serif-medium", Typeface.NORMAL)
+        val shadowR = tv.textSize * if (focused) 0.75f else 0.4f
+        tv.setShadowLayer(shadowR, 0f, shadowR * 0.25f, LauncherUtils.withAlpha(Color.BLACK, 215))
+    }
 }
