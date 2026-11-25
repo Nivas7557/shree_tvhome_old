@@ -47,6 +47,7 @@ class LauncherPreferences(context: Context) {
         const val PREF_TILE_COLOR = "tile_color"
         const val PREF_COLUMNS = "grid_columns"
         const val PREF_GRID_LAYOUT = "grid_layout_mode"
+        const val PREF_UI_DESIGN = "ui_design_mode"
         const val PREF_GRID_ANIM = "grid_anim_style"
         const val PREF_PANEL_WIDTH = "panel_width_pct"
         const val PREF_WALLPAPER = "custom_wallpaper_uri"
@@ -97,6 +98,14 @@ class LauncherPreferences(context: Context) {
         get() = prefs.getInt(PREF_ACCENT, TileThemePalette.ACCENTS.first().color)
         set(value) {
             prefs.edit().putInt(PREF_ACCENT, value).apply()
+            notifyStyleChanged()
+        }
+
+    // "classic" = existing UI, "vision" = new frameless VisionOS UI
+    var uiDesignMode: String
+        get() = prefs.getString(PREF_UI_DESIGN, "vision") ?: "vision"
+        set(value) {
+            prefs.edit().putString(PREF_UI_DESIGN, value).apply()
             notifyStyleChanged()
         }
 
