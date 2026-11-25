@@ -19,6 +19,7 @@ import shree.tvhome.source.LauncherPresets
 import shree.tvhome.source.LauncherUtils
 import shree.tvhome.source.MotionEngine
 import shree.tvhome.source.TileThemePalette
+import shree.tvhome.design.AppGridManager
 
 object CustomizeMenuBuilder {
 
@@ -144,6 +145,19 @@ object CustomizeMenuBuilder {
                 onOpenWallpaper()
             },
             LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(ctx, 4) }
+        )
+
+        PanelUiKit.addSectionHeader(ctx, panel, lp, "UI DESIGN STYLE (TEST MODE)")
+        PanelUiKit.addSegmentedTrack(
+            ctx, panel, lp,
+            options = listOf("vision" to "✨ VisionOS", "classic" to "⊞ Classic"),
+            getSelected = { lp.uiDesignMode },
+            onSelect = { key ->
+                lp.uiDesignMode = key
+                AppGridManager.clearCache()
+                onLiveRefresh()
+                onRefreshPanel()
+            }
         )
 
         PanelUiKit.addSectionHeader(ctx, panel, lp, "HOME GRID LAYOUT")
