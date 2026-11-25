@@ -60,6 +60,10 @@ class LauncherPreferences(context: Context) {
         const val PREF_CACHED_WEATHER_CODE = "cached_weather_code"
         const val PREF_MOTION_STYLE = "motion_style"
         const val PREF_WEATHER_CITY = "weather_city"
+        const val PREF_GRID_LAYOUT = "grid_layout_mode"
+        const val PREF_GRID_ANIM = "grid_anim_style"
+        const val PREF_PANEL_WIDTH = "panel_width_pct"
+
 
         // Profile Pic Keys
         const val PREF_PROFILE_PIC_URI = "profile_pic_uri"
@@ -119,6 +123,16 @@ class LauncherPreferences(context: Context) {
             prefs.edit().putString(PREF_TILE_COLOR, value).apply()
             notifyStyleChanged()
         }
+
+    var gridLayoutMode: String
+        get() = prefs.getString(PREF_GRID_LAYOUT, TileThemePalette.GRID_LAYOUT_MODES.first().key)
+            ?: TileThemePalette.GRID_LAYOUT_MODES.first().key
+        set(value) = prefs.edit().putString(PREF_GRID_LAYOUT, value).apply()
+
+    var gridAnimStyle: String
+        get() = prefs.getString(PREF_GRID_ANIM, LauncherPresets.GRID_ANIMATIONS.first().key)
+            ?: LauncherPresets.GRID_ANIMATIONS.first().key
+        set(value) = prefs.edit().putString(PREF_GRID_ANIM, value).apply()
 
     var columns: Int
         get() = prefs.getInt(PREF_COLUMNS, 6).coerceIn(TileThemePalette.GRID_COL_RANGE)
