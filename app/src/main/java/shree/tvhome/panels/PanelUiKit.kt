@@ -59,28 +59,33 @@ object PanelUiKit {
         })
     }
 
-    fun glassCardBg(ctx: Context, accent: Int, active: Boolean, themeKey: String? = null) = GradientDrawable(
-        GradientDrawable.Orientation.TOP_BOTTOM,
-        if (active) {
-            intArrayOf(
-                LauncherUtils.withAlpha(accent, 225),
-                LauncherUtils.withAlpha(accent, 145)
-            )
-        } else {
-            val base = TileThemePalette.getTheme(themeKey).normalColors
-            val topCol = base.firstOrNull() ?: Color.rgb(22, 34, 72)
-            val botCol = base.lastOrNull() ?: topCol
-            intArrayOf(
-                LauncherUtils.blendWithAccent(topCol, accent, 0.14f, 185),
-                LauncherUtils.withAlpha(botCol, 155)
+    fun glassCardBg(ctx: Context, accent: Int, active: Boolean, themeKey: String? = null): GradientDrawable {
+        if (LauncherPreferences(ctx).uiDesignMode == "vision") {
+            return shree.tvhome.design.VisionUiComponents.visionCardBg(ctx, accent, active)
+        }
+        return GradientDrawable(
+            GradientDrawable.Orientation.TOP_BOTTOM,
+            if (active) {
+                intArrayOf(
+                    LauncherUtils.withAlpha(accent, 225),
+                    LauncherUtils.withAlpha(accent, 145)
+                )
+            } else {
+                val base = TileThemePalette.getTheme(themeKey).normalColors
+                val topCol = base.firstOrNull() ?: Color.rgb(22, 34, 72)
+                val botCol = base.lastOrNull() ?: topCol
+                intArrayOf(
+                    LauncherUtils.blendWithAccent(topCol, accent, 0.14f, 185),
+                    LauncherUtils.withAlpha(botCol, 155)
+                )
+            }
+        ).apply {
+            cornerRadius = LauncherUtils.dpF(ctx, 14f)
+            setStroke(
+                dp(ctx, if (active) 2 else 1),
+                if (active) Color.WHITE else LauncherUtils.withAlpha(accent, 115)
             )
         }
-    ).apply {
-        cornerRadius = LauncherUtils.dpF(ctx, 14f)
-        setStroke(
-            dp(ctx, if (active) 2 else 1),
-            if (active) Color.WHITE else LauncherUtils.withAlpha(accent, 115)
-        )
     }
 
     fun addSegmentedTrack(
