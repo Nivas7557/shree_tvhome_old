@@ -212,15 +212,6 @@ object AppTileFactory {
 
         wrapper.addView(unitContainer, FrameLayout.LayoutParams(-1, -1, Gravity.CENTER))
 
-        val badge = TextView(ctx).apply {
-            tag = "tile_badge"
-            textSize = 9.5f
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(Color.argb(220, 15, 20, 35))
-            }
-            gravity = Gravity.CENTER
-        }
         wrapper.addView(badge, FrameLayout.LayoutParams(dp(ctx, 18), dp(ctx, 18), Gravity.TOP or Gravity.END).apply {
             topMargin = dp(ctx, 2); rightMargin = dp(ctx, 8)
         })
