@@ -4,12 +4,14 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.view.View
 import android.widget.FrameLayout
+import shree.tvhome.source.LauncherPreferences
 import shree.tvhome.source.LauncherUtils
+import shree.tvhome.source.MotionEngine
 import shree.tvhome.source.TileThemePalette
 import kotlin.math.ceil
 
 class FluidAppGrid(context: Context) : FrameLayout(context) {
-    var columns = 6
+    var columns = TileThemePalette.GRID_COL_RANGE.first
     var gap = 0
     var tileW = 0
     var tileH = 0
@@ -19,6 +21,13 @@ class FluidAppGrid(context: Context) : FrameLayout(context) {
     init {
         clipChildren = false
         clipToPadding = false
+    }
+
+    private fun computeVerticalMargin(): Float = (tileH * 0.08f).coerceAtLeast(gap * 0.5f)
+
+    private fun resolveAnimDuration(): Long {
+        val style = LauncherPreferences(context).motionStyle
+        return MotionEngine.getSpec(style).panelEnterMs
     }
 
     fun updateGridState(newCols: Int, newTileW: Int, newTileH: Int, newGap: Int, animate: Boolean = true) {
@@ -36,7 +45,8 @@ class FluidAppGrid(context: Context) : FrameLayout(context) {
             curCellH = tileH
         }
 
-        val topPad = LauncherUtils.dpF(context, 8f)
+        val topPad = computeVerticalMargin()
+        val animDur = resolveAnimDuration()
 
         for (i in 0 until childCount) {
             val child = getChildAt(i)
@@ -51,7 +61,7 @@ class FluidAppGrid(context: Context) : FrameLayout(context) {
                 child.animate()
                     .translationX(targetX)
                     .translationY(targetY)
-                    .setDuration(360L)
+                    .setDuration(animDur)
                     .setInterpolator(LauncherUtils.FLUID_SPRING)
                     .start()
             } else {
@@ -62,7 +72,7 @@ class FluidAppGrid(context: Context) : FrameLayout(context) {
 
         if (animate && sizeChanged) {
             ValueAnimator.ofFloat(0f, 1f).apply {
-                duration = 360L
+                duration = animDur
                 interpolator = LauncherUtils.FLUID_SPRING
                 addUpdateListener { anim ->
                     val f = anim.animatedValue as Float
@@ -91,8 +101,8 @@ class FluidAppGrid(context: Context) : FrameLayout(context) {
             getChildAt(i).measure(childWSpec, childHSpec)
         }
         val rows = ceil(childCount.toDouble() / columns).toInt()
-        val topPad = LauncherUtils.dp(context, 8)
-        val bottomPad = LauncherUtils.dp(context, 24)
+        val topPad = computeVerticalMargin().toInt()
+        val bottomPad = (tileH * 0.22f).toInt()
         val totalH = topPad + rows * tileH + maxOf(0, rows - 1) * gap + bottomPad
         setMeasuredDimension(w, totalH)
     }
