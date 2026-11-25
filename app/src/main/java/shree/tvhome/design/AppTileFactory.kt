@@ -317,7 +317,6 @@ object AppTileFactory {
             "focus" -> if (wrapper.hasFocus()) View.VISIBLE else View.INVISIBLE
             else -> View.VISIBLE
         }
-        wrapper.findViewWithTag<TextView>("tile_badge")?.let { applyBadgeState(it, lp, isFav) }
     }
 }
     private fun nameplateBg(ctx: Context, focused: Boolean, accentColor: Int) = GradientDrawable(
@@ -327,17 +326,6 @@ object AppTileFactory {
     ).apply {
         cornerRadius = LauncherUtils.dpF(ctx, 10f)
         setStroke(dp(ctx, 1), if (focused) Color.WHITE else LauncherUtils.withAlpha(accentColor, 185))
-    }
-
-    private fun applyBadgeState(badge: TextView, lp: LauncherPreferences, isFav: Boolean) {
-        val badgeSpec = TileThemePalette.BADGE_MODES.find { it.key == lp.badgeMode }
-        if (isFav && badgeSpec != null && badgeSpec.key != "none") {
-            badge.visibility = View.VISIBLE
-            badge.text = badgeSpec.label.substringBefore(" ")
-            badge.setTextColor(lp.accentColor)
-        } else {
-            badge.visibility = View.GONE
-        }
     }
 
     private fun getIconBadgeSizePx(ctx: Context, tileSize: String): Int =
