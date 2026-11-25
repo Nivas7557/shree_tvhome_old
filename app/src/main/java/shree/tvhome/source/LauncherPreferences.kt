@@ -9,7 +9,6 @@ class LauncherPreferences(context: Context) {
 
     private val styleListeners = CopyOnWriteArrayList<() -> Unit>()
 
-    // Automatically attaches and detaches style listeners with the View lifecycle to prevent memory leaks
     fun bindStyleListener(view: View, listener: () -> Unit) {
         if (!styleListeners.contains(listener)) {
             styleListeners.add(listener)
@@ -47,6 +46,8 @@ class LauncherPreferences(context: Context) {
         const val PREF_TILE_SHAPE = "tile_shape"
         const val PREF_TILE_COLOR = "tile_color"
         const val PREF_COLUMNS = "grid_columns"
+        const val PREF_GRID_LAYOUT = "grid_layout_mode"
+        const val PREF_GRID_ANIM = "grid_anim_style"
         const val PREF_PANEL_WIDTH = "panel_width_pct"
         const val PREF_WALLPAPER = "custom_wallpaper_uri"
         const val PREF_FAVORITES = "favorites"
@@ -60,10 +61,6 @@ class LauncherPreferences(context: Context) {
         const val PREF_CACHED_WEATHER_CODE = "cached_weather_code"
         const val PREF_MOTION_STYLE = "motion_style"
         const val PREF_WEATHER_CITY = "weather_city"
-        const val PREF_GRID_LAYOUT = "grid_layout_mode"
-        const val PREF_GRID_ANIM = "grid_anim_style"
-        const val PREF_PANEL_WIDTH = "panel_width_pct"
-
 
         // Profile Pic Keys
         const val PREF_PROFILE_PIC_URI = "profile_pic_uri"
@@ -124,6 +121,10 @@ class LauncherPreferences(context: Context) {
             notifyStyleChanged()
         }
 
+    var columns: Int
+        get() = prefs.getInt(PREF_COLUMNS, 6).coerceIn(TileThemePalette.GRID_COL_RANGE)
+        set(value) = prefs.edit().putInt(PREF_COLUMNS, value.coerceIn(TileThemePalette.GRID_COL_RANGE)).apply()
+
     var gridLayoutMode: String
         get() = prefs.getString(PREF_GRID_LAYOUT, TileThemePalette.GRID_LAYOUT_MODES.first().key)
             ?: TileThemePalette.GRID_LAYOUT_MODES.first().key
@@ -134,10 +135,6 @@ class LauncherPreferences(context: Context) {
             ?: LauncherPresets.GRID_ANIMATIONS.first().key
         set(value) = prefs.edit().putString(PREF_GRID_ANIM, value).apply()
 
-    var columns: Int
-        get() = prefs.getInt(PREF_COLUMNS, 6).coerceIn(TileThemePalette.GRID_COL_RANGE)
-        set(value) = prefs.edit().putInt(PREF_COLUMNS, value.coerceIn(TileThemePalette.GRID_COL_RANGE)).apply()
-
     var panelWidthPct: Int
         get() = prefs.getInt(PREF_PANEL_WIDTH, TileThemePalette.PANEL_WIDTH_OPTIONS.getOrElse(1) { TileThemePalette.PANEL_WIDTH_OPTIONS.first() })
             .coerceIn(TileThemePalette.PANEL_WIDTH_OPTIONS.first(), TileThemePalette.PANEL_WIDTH_OPTIONS.last())
@@ -145,7 +142,6 @@ class LauncherPreferences(context: Context) {
             PREF_PANEL_WIDTH,
             value.coerceIn(TileThemePalette.PANEL_WIDTH_OPTIONS.first(), TileThemePalette.PANEL_WIDTH_OPTIONS.last())
         ).apply()
-
     private val defaultDeviceOwner: String by lazy {
         val resolver = context.contentResolver
         val globalName = try {
@@ -192,6 +188,7 @@ class LauncherPreferences(context: Context) {
     var motionStyle: String
         get() = prefs.getString(PREF_MOTION_STYLE, MotionEngine.STYLES.first().key) ?: MotionEngine.STYLES.first().key
         set(value) = prefs.edit().putString(PREF_MOTION_STYLE, value).apply()
+
     var weatherCity: String
         get() = prefs.getString(PREF_WEATHER_CITY, "") ?: ""
         set(value) = prefs.edit().putString(PREF_WEATHER_CITY, value).apply()
@@ -240,7 +237,6 @@ class LauncherPreferences(context: Context) {
         get() = prefs.getInt(PREF_CUSTOM_WARMTH, 0).coerceIn(0, 75)
         set(value) = prefs.edit().putInt(PREF_CUSTOM_WARMTH, value.coerceIn(0, 75)).apply()
 
-    // Nameplate modes: "always", "focus", "hidden"
     var nameplateMode: String
         get() = prefs.getString(PREF_NAMEPLATE_MODE, "always") ?: "always"
         set(value) = prefs.edit().putString(PREF_NAMEPLATE_MODE, value).apply()
